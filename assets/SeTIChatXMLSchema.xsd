@@ -1,0 +1,118 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schema xmlns="http://www.w3.org/2001/XMLSchema" elementFormDefault="qualified">
+<element name="message">
+  	<complexType>
+    	<sequence>
+		<element name="header">
+  		<complexType>
+    		<all>
+      			<element name="idSource" type="string" minOccurs="1" maxOccurs="1"/>
+	      		<element name="idDestination" type="string" minOccurs="1" maxOccurs="1"/>
+    	  		<element name="idMessage" type="string" minOccurs="1" maxOccurs="1"/>
+    	  		<element name="type" type="string" minOccurs="1" maxOccurs="1"/>
+      			<element name="encrypted" type="boolean" minOccurs="1" maxOccurs="1"/>
+      			<element name="signed" type="boolean" minOccurs="1" maxOccurs="1"/>
+    		</all>
+  		</complexType>
+		</element>
+		
+		<element name="content">
+		<complexType>
+			<choice> 
+				<!--  SignUp -->
+				<element name="signup">
+					<complexType>
+					<all>
+						<element name="nick" type="string" minOccurs="1" maxOccurs="1"/>
+	      				<element name="mobile" type="string" minOccurs="1" maxOccurs="1"/>
+					</all>
+					</complexType>
+				</element>
+				
+				<!-- ContactRequest -->
+				<element name="mobileList">
+					<complexType>
+					<sequence>
+						<element name="mobile" type="string" minOccurs="0" maxOccurs="unbounded"/>
+					</sequence>
+					</complexType>
+				</element>
+				
+				<!--  ContactResponse -->
+				<element name="contactList">
+					<complexType>
+					<sequence>
+						<element name="contact" minOccurs="0" maxOccurs="unbounded">
+							<complexType>
+							<all>
+								<element name="nick" type="string" minOccurs="1" maxOccurs="1"/>
+	      						<element name="mobile" type="string" minOccurs="1" maxOccurs="1"/>
+							</all>
+							</complexType>
+						</element>
+					</sequence>
+					</complexType>
+				</element>
+				
+				<!-- Upload -->
+				<element name="upload">
+					<complexType>
+					<all>
+						<element name="type" type="string" minOccurs="1" maxOccurs="1"/>
+	      				<element name="key" type="string" minOccurs="1" maxOccurs="1"/>
+					</all>
+					</complexType>
+				</element>
+				
+				<!-- Download -->
+				<element name="download">
+					<complexType>
+					<all>
+						<element name="type" type="string" minOccurs="1" maxOccurs="1"/>
+	      				<element name="key" type="string" minOccurs="1" maxOccurs="1"/>
+	      				<element name="mobile" type="string" minOccurs="1" maxOccurs="1"/>
+					</all>
+					</complexType>
+				</element>
+				
+				<!-- ChatMessage -->
+				<element name="chatMessage" type="string" minOccurs="1" maxOccurs="1"/>
+				
+				<!-- Revocation -->
+				<element name="revokedMobile" type="string" minOccurs="1" maxOccurs="1"/>
+				
+				<!-- Connection -->
+				<element name="connection" type="string" minOccurs="1" maxOccurs="1"/>
+				
+				<!-- Response -->
+				<element name="response">
+					<complexType>
+					<all>
+						<element name="responseCode" type="string" minOccurs="1" maxOccurs="1"/>
+	      				<element name="responseMessage" type="string" minOccurs="1" maxOccurs="1"/>
+					</all>
+					</complexType>
+				</element>
+				<!-- Certificate Request -->
+				<element name="keyrequest">
+					<complexType>
+					<all>
+						<element name="type" type="string" minOccurs="1" maxOccurs="1"/>
+	      				<element name="mobile" type="string" minOccurs="1" maxOccurs="1"/>
+					</all>
+					</complexType>
+				</element>
+			
+			</choice>
+		</complexType>
+		</element>
+		
+		<element name="signature" type="string" minOccurs="0"/>
+		
+	
+
+		</sequence>
+  	</complexType>
+</element>
+
+</schema>

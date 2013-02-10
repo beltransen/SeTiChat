@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<message>
+<header>
+	<idSource>100012345.100056789.100023456</idSource>
+<idDestination>setichat@appspot.com</idDestination>
+		<idMessage>2d46f3c49a2c6b7a2</idMessage>
+	<type>9</type>
+	<encrypted>false</encrypted>
+	<signed>false</signed>
+</header>	
+	<content>
+		<upload>
+<key>FHW41AB…2239DA==</key>
+<type>public</type>		
+		</upload>
+	</content>
+</message>
