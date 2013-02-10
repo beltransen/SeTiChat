@@ -64,7 +64,10 @@ public class ContactsFragment extends ListFragment {
         // the dialog fragment with selected text.
         Intent intent = new Intent();
         intent.setClass(getActivity(), SeTIChatConversationActivity.class);
-        intent.putExtra("index", position);           
+        intent.putExtra("index", position);  
+        
+        // Meter la informacion del número de teléfono en el intent para luego reconocer los mensajes
+        
         startActivity(intent);
     }
     
