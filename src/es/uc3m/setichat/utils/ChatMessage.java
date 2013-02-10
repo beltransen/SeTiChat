@@ -78,8 +78,8 @@ public class ChatMessage {
 	// Signature
 	private String signature;
 
+	/***************** Methods *********************/
 	
-	// Methods
 	public String getIdSource() {
 		return idSource;
 	}
