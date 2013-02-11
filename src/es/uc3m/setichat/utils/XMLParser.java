@@ -16,13 +16,23 @@ import org.xml.sax.InputSource;
 
 public class XMLParser {
 
+	/**XMLtoMessage
+	 * Method to parse an XML string and convert it into a ChatMessage object
+	 * easier to use in the application.
+	 * 
+	 * @param message String with an xml content as described in
+	 * practice definition 
+	 * @return ChatMessage Object containing xml content
+	 */
 	public static ChatMessage XMLtoMessage (String message){
 		
 		ChatMessage messageobj = new ChatMessage();
 		
 		try {
 			
+			//////////////////////////////////////////////////////////////////////////////			
 			// Header fields (Mandatory)
+			//////////////////////////////////////////////////////////////////////////////			
 			Document doc = loadXMLFromString(message);
 			NodeList n1 = doc.getElementsByTagName("header");
 			Element header = (Element)n1.item(0);
@@ -33,9 +43,12 @@ public class XMLParser {
 			messageobj.setEncrypted(getTextValue(header,"encrypted").equalsIgnoreCase("true"));
 			messageobj.setSigned(getTextValue(header,"signed").equalsIgnoreCase("true"));
 			messageobj.setType((byte) getIntValue(header, "type"));
+						
 			
-			
+			//////////////////////////////////////////////////////////////////////////////
 			// Content
+			//////////////////////////////////////////////////////////////////////////////
+			
 			NodeList n2 = doc.getElementsByTagName("content");
 			Element content = (Element)n2.item(0);
 			
@@ -134,10 +147,9 @@ public class XMLParser {
 			}				
 			
 			
-			///////////////////////////////////////////////////////////////////////////
-			///////////////////////////////////////////////////////////////////////////
-
-			// Signature			
+			//////////////////////////////////////////////////////////////////////////////
+			// Signature
+			//////////////////////////////////////////////////////////////////////////////			
 			NodeList n3 = doc.getElementsByTagName("signature");
 			if(n3.getLength() != 0)
 			{
@@ -159,6 +171,12 @@ public class XMLParser {
 		return messageobj;
 	}
 	
+	/**Method to convert an XML string to a Document object
+	 * 
+	 * @param xml XML string 
+	 * @return Document result of converting XML string 
+	 * @throws Exception
+	 */
     public static Document loadXMLFromString(String xml) throws Exception
     {
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
@@ -169,6 +187,9 @@ public class XMLParser {
     
     
 
+    /**
+     * Gets the content of a child of Element ele named tagName
+     */
     private static String getTextValue(Element ele, String tagName) {
 		String textVal = null;
 		NodeList nl = ele.getElementsByTagName(tagName);
