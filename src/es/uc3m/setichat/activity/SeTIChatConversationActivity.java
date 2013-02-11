@@ -100,9 +100,6 @@ public class SeTIChatConversationActivity extends Activity {
 		chatMessageReceiver = new BroadcastReceiver() {
 		    @Override
 		    public void onReceive(Context context, Intent intent) {
-		      //do something based on the intent's action
-		    	Context context1 = getApplicationContext();
-				int duration = Toast.LENGTH_SHORT;
 				// Append message contained in the Intent to message list
 				text.append("");
 		    }
