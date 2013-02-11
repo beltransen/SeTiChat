@@ -217,24 +217,82 @@ public class ChatMessage {
 	}
 	
 	public String toString(){
-		String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+		String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<message>";
 		
 		// Generate <header>
-		String headerBlock = "<header>";
-		
-		headerBlock+="</header>";
+		String headerBlock = "<header>\n<message>\n";
+		headerBlock+="<idSource>"+this.idSource+"</idSource>\n";
+		headerBlock+="<idDestination>"+this.idDestination+"</idDestination>\n";
+		headerBlock+="<idMessage>"+this.idMessage+"</idMessage>\n";
+		headerBlock+="<type>"+this.type+"</type>\n";
+		headerBlock+="<encrypted>"+this.encrypted+"</encrypted>\n";
+		headerBlock+="<signed>"+this.signed+"</signed>\n";
+		headerBlock+="</header>\n";
 		
 		// Generate <content>
-		String contentBlock = "<content>";
+		String contentBlock = "<content>\n";
+		switch(this.type){
+		case 1: // SignUp
+			contentBlock += "<signup>\n";
+			contentBlock += "<nick>"+this.nick+"</nick>\n<mobile>"+this.mobile+"</mobile>\n";
+			contentBlock += "</signup>\n";
+			break;
+		case 2: // Contact Request
+			contentBlock += "<mobileList>\n";
+			for(String m:this.mobileList){
+				contentBlock += "<mobile>"+m+"</mobile>\n";
+			}
+			contentBlock += "</mobileList>\n";
+			break;
+		case 3: // Contact Response
+			contentBlock += "<contactList>\n";
+			for(String[] m:this.contactList){
+				contentBlock += "<contact>\n" +
+						"<mobile>"+m[0]+"</mobile>\n" +
+						"<nick>"+m[1]+"</nick>\n";
+			}			
+			contentBlock += "</contactList>\n";
+			break;
+		case 4: // Chat Message
+			String mes = (String) ((this.encrypted) ? Base64.encodeToString(this.chatMessage.getBytes(), false): this.chatMessage);
+			contentBlock += "<chatMessage>\n"+mes+"</chatMessage>\n";
+			break;
+		case 5: // Connection
+			contentBlock += "<connection>\n</connection>\n";
+			break;
+		case 6: // Response
+			contentBlock += "<response>\n";
+			contentBlock += "<responseCode>"+this.responseCode+"</responseCode>\n<responseMessage>"+this.responseMessage+"</responseMessage>\n";
+			contentBlock += "</response>\n";
+			break;
+		case 7: // Revocation
+			contentBlock += "<revokedMobile>"+this.revokedMobile+"</revokedMobile>\n";
+			break;
+		case 8: // KeyRequest
+			contentBlock += "<keyrequest>\n";
+			contentBlock += "<type>"+(String) ((this.publicKey) ? "public" : "private") +"</type>\n<mobile>"+this.mobile+"</mobile>\n";
+			contentBlock += "</keyrequest>\n";
+			break;
+		case 9: // Download
+			contentBlock += "<download>\n";
+			contentBlock += "<key>"+this.key+"</key><type>"+(String) ((this.publicKey) ? "public" : "private") +"</type>\n<mobile>"+this.mobile+"</mobile>\n";
+			contentBlock += "</download>\n";
+			break;
+		case 10: // Upload
+			contentBlock += "<upload>\n";
+			contentBlock += "<key>"+this.key+"</key><type>"+(String) ((this.publicKey) ? "public" : "private") + "</type>\n";
+			contentBlock += "</upload>\n";
+			break;
+		}
 		
-		contentBlock += "</content>";
+		contentBlock += "</content>\n";
 		
 		// Generate <signature>
-		String signatureBlock = "<signature>";
+		String signatureBlock = "<signature>n";
 		signatureBlock += (String) ((this.signed) ? Base64.encodeToString(this.signature, false) : this.signature);
-		signatureBlock += "</signature>";
+		signatureBlock += "\n</signature>";
 		
-		xml  = headerBlock + contentBlock + signatureBlock;
+		xml += headerBlock + contentBlock + signatureBlock+"\n</message>";
 		return xml;
 	}
 }
