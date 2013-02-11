@@ -10,7 +10,7 @@ public class ChatMessage {
 			String mobile, String[] mobileList, String[][] contactList,
 			String chatMessage, byte responseCode, String responseMessage,
 			String revokedMobile, boolean publicKey, String key,
-			String signature) {
+			byte[] signature) {
 		super();
 		this.idSource = idSource;
 		this.idDestination = idDestination;
@@ -76,7 +76,7 @@ public class ChatMessage {
 	//type
 	
 	// Signature
-	private String signature;
+	private byte[] signature;
 
 	/***************** Methods *********************/
 	
@@ -208,11 +208,33 @@ public class ChatMessage {
 		this.key = key;
 	}
 
-	public String getSignature() {
+	public byte[] getSignature() {
 		return signature;
 	}
 
-	public void setSignature(String signature) {
+	public void setSignature(byte[] signature) {
 		this.signature = signature;
+	}
+	
+	public String toString(){
+		String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?>";
+		
+		// Generate <header>
+		String headerBlock = "<header>";
+		
+		headerBlock+="</header>";
+		
+		// Generate <content>
+		String contentBlock = "<content>";
+		
+		contentBlock += "</content>";
+		
+		// Generate <signature>
+		String signatureBlock = "<signature>";
+		signatureBlock += (String) ((this.signed) ? Base64.encodeToString(this.signature, false) : this.signature);
+		signatureBlock += "</signature>";
+		
+		xml  = headerBlock + contentBlock + signatureBlock;
+		return xml;
 	}
 }
