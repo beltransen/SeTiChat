@@ -104,18 +104,11 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		  chatMessageReceiver = new BroadcastReceiver() {
 			    @Override
 			    public void onReceive(Context context, Intent intent) {
-			      //do something based on the intent's action
-			    	Context context1 = getApplicationContext();
-					CharSequence text = "SeTIChat Message Received";
-					int duration = Toast.LENGTH_SHORT;
-					// Extract Phone number from message
-					
-					// Add phone and message type information to the intent (with addCategory)
+					// Add phone and message type information to the intent (with addCategory) 
+					intent.addCategory(intent.getStringExtra("idSource"));
 					
 					// Broadcast message
-					
-					Toast toast = Toast.makeText(context1, text, duration);
-					toast.show();
+					context.sendBroadcast(intent); 
 			    }
 			  };
 			  

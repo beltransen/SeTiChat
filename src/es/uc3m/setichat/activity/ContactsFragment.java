@@ -7,6 +7,7 @@ import android.app.Activity;
 import android.app.ListFragment;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
@@ -64,9 +65,11 @@ public class ContactsFragment extends ListFragment {
         // the dialog fragment with selected text.
         Intent intent = new Intent();
         intent.setClass(getActivity(), SeTIChatConversationActivity.class);
-        intent.putExtra("index", position);  
+        // Meter la informacion del número de teléfono en el intent para luego reconocer los mensajes 
+        String mobile = l.getAdapter().getItem(position).toString();
+        Log.i("Click on conversation", "Conversation: "+mobile+" opened");
+        intent.putExtra("mobile", mobile);  
         
-        // Meter la informacion del número de teléfono en el intent para luego reconocer los mensajes
         
         startActivity(intent);
     }

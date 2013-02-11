@@ -6,6 +6,8 @@ import java.io.IOException;
 
 import edu.gvsu.cis.masl.channelAPI.ChannelAPI;
 import edu.gvsu.cis.masl.channelAPI.ChannelService;
+import es.uc3m.setichat.utils.ChatMessage;
+import es.uc3m.setichat.utils.XMLParser;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -165,15 +167,18 @@ public class SeTIChatService extends Service implements ChannelService {
 		public void onMessage(String message) {
 			Log.i("onMessage", "Message received :"+message);
 			// Extract message type (server or user) to decide handler
-			
+			ChatMessage m = XMLParser.XMLtoMessage(message);
 			
 			// TODO Auto-generated method stub
 			String intentKey = "es.uc3m.SeTIChat.CHAT_MESSAGE";
 			Intent openIntent = new Intent(intentKey);
-			openIntent.putExtra("message", message);
 			openIntent.setPackage("es.uc3m.setichat");
 			
-			// Add message type info to intent
+			// Add message to intent
+			openIntent.putExtra("idSource", m.getIdSource());
+			// A„ADIR EL RESTO DE CAMPOS DEL MENSAJE
+			
+			
 			
 			Context context = getApplicationContext();
 			context.sendBroadcast(openIntent);  

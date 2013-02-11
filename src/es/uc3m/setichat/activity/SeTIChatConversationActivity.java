@@ -107,7 +107,7 @@ public class SeTIChatConversationActivity extends Activity {
 			  
 		IntentFilter chatMessageFilter = new IntentFilter();
 		chatMessageFilter.addAction("es.uc3m.SeTIChat.CHAT_MESSAGE");
-		// Add Phone number as category to filter messages
+		// Add Phone number as category to filter messages (taken from ContactList View)
 		chatMessageFilter.addCategory("");
 		registerReceiver(chatMessageReceiver, chatMessageFilter);
 		
