@@ -41,7 +41,7 @@ public class XMLParser {
 			
 			//Sign up content node
 			NodeList nsignup = content.getElementsByTagName("signup");
-			if(null != nsignup)
+			if(0 != nsignup.getLength())
 			{
 				Element signup = (Element) nsignup.item(0);
 				messageobj.setNick(getTextValue(signup, "nick"));
@@ -50,7 +50,7 @@ public class XMLParser {
 			
 			//Contact Request node
 			NodeList ncreq = content.getElementsByTagName("mobileList");
-			if(null != ncreq)
+			if(0 != ncreq.getLength())
 			{	
 				String [] mobileList = new String [2];
 				Element mobile1 = (Element) ncreq.item(0);
@@ -63,7 +63,7 @@ public class XMLParser {
 			
 			//Contact Response node
 			NodeList ncresp = content.getElementsByTagName("contactList");
-			if(null != ncresp)
+			if(0 != ncresp.getLength())
 			{	
 				Element contactList = (Element) ncresp.item(0);
 				Element cresp = (Element) contactList.getElementsByTagName("contact").item(0);
@@ -73,15 +73,16 @@ public class XMLParser {
 			
 			//Chat Message
 			NodeList nchatmess = content.getElementsByTagName("chatMessage");
-			if(null != nchatmess)
+			if(0 != nchatmess.getLength())
 			{	
 				Element chatmessage = (Element) nchatmess.item(0);
-				messageobj.setMobile(chatmessage.getNodeValue());			
+				//messageobj.setMobile(chatmessage.getNodeValue());	
+				messageobj.setChatMessage(chatmessage.getTextContent());
 			}
 			
 			//Connection
 			NodeList ncon = content.getElementsByTagName("connection");
-			if(null != ncon)
+			if(0 != ncon.getLength())
 			{	
 				Element chatmessage = (Element) ncon.item(0);
 				messageobj.setMobile(chatmessage.getNodeValue());			
@@ -89,7 +90,7 @@ public class XMLParser {
 			
 			//Response
 			NodeList nresponse = content.getElementsByTagName("response");
-			if(null != nresponse)
+			if(0 != nresponse.getLength())
 			{	
 				Element response = (Element) nresponse.item(0);
 				messageobj.setResponseCode((byte) getIntValue(response, "responseCode"));
@@ -98,7 +99,7 @@ public class XMLParser {
 			
 			//Revocation
 			NodeList nrevoc = content.getElementsByTagName("revokedMobile");
-			if(null != nrevoc)
+			if(0 != nrevoc.getLength())
 			{	
 				Element revoc = (Element) nrevoc.item(0);
 				messageobj.setRevokedMobile(revoc.getNodeValue());				
@@ -106,7 +107,7 @@ public class XMLParser {
 			
 			//Key Request
 			NodeList nkeyreq = content.getElementsByTagName("keyrequest");
-			if(null != nkeyreq)
+			if(0 != nkeyreq.getLength())
 			{	
 				Element keyreq = (Element) nkeyreq.item(0);
 				// FALTA TYPE PARA KEY REQUEST
@@ -115,7 +116,7 @@ public class XMLParser {
 			
 			//Download
 			NodeList ndownload = content.getElementsByTagName("download");
-			if(null != ndownload)
+			if(0 != ndownload.getLength())
 			{	
 				Element down = (Element) ndownload.item(0);
 				// FALTA TYPE PARA DOWNLOAD
@@ -125,7 +126,7 @@ public class XMLParser {
 			
 			//Upload
 			NodeList nupload = content.getElementsByTagName("upload");
-			if(null != nupload)
+			if(0 != nupload.getLength())
 			{	
 				Element down = (Element) nupload.item(0);
 				// FALTA TYPE PARA DOWNLOAD
@@ -138,8 +139,11 @@ public class XMLParser {
 
 			// Signature			
 			NodeList n3 = doc.getElementsByTagName("signature");
-			Element signature = (Element)n2.item(0);
-			messageobj.setSignature(getTextValue(signature, "signature").getBytes());
+			if(n3.getLength() != 0)
+			{
+				Element signature = (Element)n3.item(0);
+				messageobj.setSignature(getTextValue(signature, "signature").getBytes());
+			}
 
 
 
@@ -185,3 +189,4 @@ public class XMLParser {
 		return Integer.parseInt(getTextValue(ele,tagName));
 	}
 }
+

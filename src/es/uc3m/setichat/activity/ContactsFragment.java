@@ -2,7 +2,7 @@ package es.uc3m.setichat.activity;
 
 
 import es.uc3m.setichat.activity.SeTIChatConversationActivity;
-import es.uc3m.setichat.service.SeTIChatService;
+import es.uc3m.setichat.service.SeTIChatService;	
 import android.app.Activity;
 import android.app.ListFragment;
 import android.content.Intent;

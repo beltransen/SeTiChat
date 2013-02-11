@@ -4,6 +4,7 @@ package es.uc3m.setichat.service;
 
 import java.io.IOException;
 
+
 import edu.gvsu.cis.masl.channelAPI.ChannelAPI;
 import edu.gvsu.cis.masl.channelAPI.ChannelService;
 import es.uc3m.setichat.utils.ChatMessage;
@@ -52,6 +53,22 @@ public class SeTIChatService extends Service implements ChannelService {
 	    channel = new ChannelAPI();
 		this.connect("MobileNumber");  
 	    binder.onCreate(this);
+//	    XMLParser.XMLtoMessage("<?xml version='1.0' encoding='UTF-8'?>"
+//	    		+ "<message>"
+//	    		+ "<header>" 
+//	    		+ "<idSource>FEAD…FAA3</idSource>" 
+//	    		+ "<idDestination>100012345.100056789</idDestination>" 
+//	    		+ "<idMessage>2d46f3c49a2c6b7a2</idMessage>" 
+//	    		+ "<type>4</type>" 
+//	    		+ "<encrypted>false</encrypted>" 
+//	    		+ "<signed>false</signed>" 
+//	    		+ "</header>" 
+//	    		+ "<content>" 
+//	    		+ "<chatMessage>" 
+//	    		+ "Hi there!!!"
+//	    		+ "</chatMessage>" 
+//	    		+ "</content>" 
+//	    		+ "</message>");
 	    
 		 
 	  }
