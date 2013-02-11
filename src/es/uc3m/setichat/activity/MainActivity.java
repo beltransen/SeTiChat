@@ -108,7 +108,12 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			    	Context context1 = getApplicationContext();
 					CharSequence text = "SeTIChat Message Received";
 					int duration = Toast.LENGTH_SHORT;
-
+					// Extract Phone number from message
+					
+					// Add phone and message type information to the intent (with addCategory)
+					
+					// Broadcast message
+					
 					Toast toast = Toast.makeText(context1, text, duration);
 					toast.show();
 			    }

@@ -6,9 +6,11 @@ import es.uc3m.setichat.service.SeTIChatService;
 import es.uc3m.setichat.service.SeTIChatServiceBinder;
 
 import android.app.Activity;
+import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
@@ -44,6 +46,7 @@ public class SeTIChatConversationActivity extends Activity {
 	private boolean DEBUG = false;
 
 	private SeTIChatService mService;
+	private BroadcastReceiver chatMessageReceiver;
 	
 
 	private ServiceConnection mConnection = new ServiceConnection() {
@@ -92,6 +95,24 @@ public class SeTIChatConversationActivity extends Activity {
 		} else {
 			render();
 		}
+		
+
+		chatMessageReceiver = new BroadcastReceiver() {
+		    @Override
+		    public void onReceive(Context context, Intent intent) {
+		      //do something based on the intent's action
+		    	Context context1 = getApplicationContext();
+				int duration = Toast.LENGTH_SHORT;
+				// Append message contained in the Intent to message list
+				text.append("");
+		    }
+		  };
+			  
+		IntentFilter chatMessageFilter = new IntentFilter();
+		chatMessageFilter.addAction("es.uc3m.SeTIChat.CHAT_MESSAGE");
+		// Add Phone number as category to filter messages
+		chatMessageFilter.addCategory("");
+		registerReceiver(chatMessageReceiver, chatMessageFilter);
 		
 		
 	}

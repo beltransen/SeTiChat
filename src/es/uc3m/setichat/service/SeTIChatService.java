@@ -164,11 +164,17 @@ public class SeTIChatService extends Service implements ChannelService {
 		@Override
 		public void onMessage(String message) {
 			Log.i("onMessage", "Message received :"+message);
+			// Extract message type (server or user) to decide handler
+			
+			
 			// TODO Auto-generated method stub
 			String intentKey = "es.uc3m.SeTIChat.CHAT_MESSAGE";
 			Intent openIntent = new Intent(intentKey);
 			openIntent.putExtra("message", message);
 			openIntent.setPackage("es.uc3m.setichat");
+			
+			// Add message type info to intent
+			
 			Context context = getApplicationContext();
 			context.sendBroadcast(openIntent);  
 			
