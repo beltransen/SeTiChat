@@ -104,9 +104,11 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		  chatMessageReceiver = new BroadcastReceiver() {
 			    @Override
 			    public void onReceive(Context context, Intent intent) {
+			    	Toast toast = Toast.makeText(context, "Message from server", Toast.LENGTH_SHORT);
+					toast.show();
 					// Add phone and message type information to the intent (with addCategory) 
-					intent.addCategory(intent.getStringExtra("idSource"));
-					
+					intent.addCategory("chat");
+					System.out.println(intent.getCategories());
 					// Broadcast message
 					context.sendBroadcast(intent); 
 			    }
@@ -114,6 +116,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			  
 		IntentFilter chatMessageFilter = new IntentFilter();
 		chatMessageFilter.addAction("es.uc3m.SeTIChat.CHAT_MESSAGE");
+		//chatMessageFilter.addCategory("main");
 		registerReceiver(chatMessageReceiver, chatMessageFilter);
 
 	}

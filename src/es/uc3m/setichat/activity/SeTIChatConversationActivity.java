@@ -4,6 +4,7 @@ import java.sql.Time;
 
 import es.uc3m.setichat.service.SeTIChatService;
 import es.uc3m.setichat.service.SeTIChatServiceBinder;
+import es.uc3m.setichat.utils.ChatMessage;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -101,14 +102,15 @@ public class SeTIChatConversationActivity extends Activity {
 		    @Override
 		    public void onReceive(Context context, Intent intent) {
 				// Append message contained in the Intent to message list
-				text.append("");
+		    	String m = intent.getStringExtra("message");
+				text.append(m+"\n");
 		    }
 		  };
 			  
 		IntentFilter chatMessageFilter = new IntentFilter();
 		chatMessageFilter.addAction("es.uc3m.SeTIChat.CHAT_MESSAGE");
 		// Add Phone number as category to filter messages (taken from ContactList View)
-		chatMessageFilter.addCategory("");
+		chatMessageFilter.addCategory("chat");
 		registerReceiver(chatMessageReceiver, chatMessageFilter);
 		
 		
@@ -197,7 +199,7 @@ public class SeTIChatConversationActivity extends Activity {
 
 		
 		// Setting the conversations
-		text.setText("****This is a very easy way to add text into a Text View. This has been done programatically, but could've been done using layouts."); // TODO Use a more fancy layout
+		//text.setText("****This is a very easy way to add text into a Text View. This has been done programatically, but could've been done using layouts."); // TODO Use a more fancy layout
 
 		// Sending messages
 		send.setOnClickListener(new View.OnClickListener() {
@@ -210,10 +212,13 @@ public class SeTIChatConversationActivity extends Activity {
 							"conversationView:OnClickListener: User clicked on sent button");
 
 				Time time = new Time(System.currentTimeMillis());
+				// Convert message to XML format
+				//ChatMessage m = new ChatMessage(idSource, idDestination, idMessage, encrypted, signed, type, nick, mobile, mobileList, contactList, chatMessage, responseCode, responseMessage, revokedMobile, publicKey, key, signature)
 				mService.sendMessage(edit.getText().toString());
 				// Refresh textview
-				text.setText(edit.getText().toString() + " at " + time);
+				text.append(edit.getText().toString() + " at " + time+"\n");
 				edit.setText("");
+				
 			}
 		});
 
