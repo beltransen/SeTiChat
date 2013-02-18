@@ -7,8 +7,8 @@
     <uses-sdk
         android:minSdkVersion="15"
         android:targetSdkVersion="17" />
-    
-    <uses-permission android:name="android.permission.INTERNET" /> 
+
+    <uses-permission android:name="android.permission.INTERNET" />
 
     <application
         android:allowBackup="true"
@@ -24,11 +24,17 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service android:name=".service.SeTIChatService"></service>
-        <activity android:name=".activity.SeTIChatConversationActivity"></activity>
-        
-        
-        
+
+        <service android:name="es.uc3m.setichat.service.SeTIChatService" >
+        </service>
+
+        <activity android:name="es.uc3m.setichat.activity.SeTIChatConversationActivity" >
+        </activity>
+        <activity
+            android:name="es.uc3m.setichat.SignUpActivity"
+            android:label="@string/title_activity_sign_up"
+            android:windowSoftInputMode="adjustResize|stateVisible" >
+        </activity>
     </application>
 
 </manifest>

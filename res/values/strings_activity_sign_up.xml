@@ -1,0 +1,16 @@
+<resources>
+
+    <string name="title_activity_sign_up">Sign Up</string>
+
+    <!-- Strings related to login -->
+    <string name="prompt_nick">Nickname</string>
+    <string name="prompt_phone">Mobile phone</string>
+    <string name="action_sign_up_short">Sign up</string>
+    <string name="menu_forgot_password">Recover lost password</string>
+    <string name="login_progress_signing_in">Signing up&#8230;</string>
+    <string name="error_invalid_email">This email address is invalid</string>
+    <string name="error_invalid_password">This password is too short</string>
+    <string name="error_incorrect_password">This password is incorrect</string>
+    <string name="error_field_required">This field is required</string>
+
+</resources>
