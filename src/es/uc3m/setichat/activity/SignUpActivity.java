@@ -109,25 +109,30 @@ public class SignUpActivity extends Activity {
 				
 				// Check message code
 				if(mes.getResponseCode()==201){
-					// Persist random number received from server as sourceId
-					
-					
 					Log.i("SIGNUP", "Signed up successfully");
+					finishSignUp(intent, RESULT_OK);
 				}else{
 					// Show error message
-					// Toast
-					
 					Log.e("SIGNUP", "Error in Sign Up process: "+mes.getResponseCode());
+					finishSignUp(intent, RESULT_CANCELED);
 				}
 				
 				
 		    }
+
 		};
 		
 		IntentFilter filter = new IntentFilter();
 		filter.addAction("es.uc3m.SeTIChat.SIGN_UP");
 		
 		registerReceiver(chatMessageReceiver, filter);
+	}
+
+	protected void finishSignUp(Intent mes, int code) {
+		// TODO Auto-generated method stub
+		setResult(code, mes);
+		finish();
+		
 	}
 
 	@Override
@@ -137,6 +142,12 @@ public class SignUpActivity extends Activity {
 		return true;
 	}
 	
+	@Override
+	public void onStop(){
+		super.onStop();
+		unregisterReceiver(chatMessageReceiver);
+		unbindService(mConnection);
+	}
 	
 	
 	public void signUp(String nick, String phone){
@@ -152,7 +163,8 @@ public class SignUpActivity extends Activity {
 		mes.setNick(nick);
 		mes.setMobile(phone);
 		
+		String m = mes.toString();
 		// Send message to server
-		mService.sendMessage(mes.toString());
+		mService.sendMessage(m);
 	}
 }

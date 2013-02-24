@@ -30,6 +30,11 @@ public class XMLParser {
 		
 		try {
 			
+			// Substitue symbols 
+			message = message.replaceAll("u003c", "<");
+			message = message.replaceAll("u003e", ">");
+			message = message.replaceAll("u003d", "=");
+			
 			//////////////////////////////////////////////////////////////////////////////			
 			// Header fields (Mandatory)
 			//////////////////////////////////////////////////////////////////////////////			

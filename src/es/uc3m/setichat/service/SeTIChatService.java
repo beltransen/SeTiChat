@@ -12,6 +12,7 @@ import es.uc3m.setichat.utils.XMLParser;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.IBinder;
 import android.util.Log;
@@ -33,7 +34,9 @@ public class SeTIChatService extends Service implements ChannelService {
 	// Used to bind activities
 	private final SeTIChatServiceBinder binder=new SeTIChatServiceBinder();
 	
-	
+	// Needed variables
+	private boolean signedUp;
+	private final String PREFERENCES_FILE = "SeTiChat-Settings";
 
 	
 	public SeTIChatService() {
@@ -46,7 +49,10 @@ public class SeTIChatService extends Service implements ChannelService {
 	  public void onCreate() {
 	    super.onCreate();
 	    Log.i("SeTIChat Service", "Service created");
-		
+	    
+	    // Read if registered from Preferences file
+	    SharedPreferences settings = this.getSharedPreferences(	PREFERENCES_FILE, 0);
+		signedUp = settings.getBoolean("registered", false);
 	    
 	    // SeTIChat connection is seted up in this step. 
 	    // Mobile phone should be changed with the appropiate value
@@ -188,7 +194,7 @@ public class SeTIChatService extends Service implements ChannelService {
 			
 			// TODO Auto-generated method stub
 			String intentKey;
-			if(m.getType()==1){
+			if(!signedUp){
 				intentKey = "es.uc3m.SeTIChat.SIGN_UP";
 			}else{
 				intentKey = "es.uc3m.SeTIChat.CHAT_INTERNALMESSAGE";

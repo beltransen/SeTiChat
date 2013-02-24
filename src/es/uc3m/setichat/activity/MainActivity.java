@@ -4,12 +4,6 @@ package es.uc3m.setichat.activity;
 
 
 
-import es.uc3m.setichat.R;
-
-
-import es.uc3m.setichat.service.SeTIChatService;
-import es.uc3m.setichat.service.SeTIChatServiceBinder;
-
 import android.app.ActionBar;
 import android.app.AlertDialog;
 import android.app.FragmentTransaction;
@@ -26,6 +20,11 @@ import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.Menu;
 import android.widget.Toast;
+import es.uc3m.setichat.R;
+import es.uc3m.setichat.service.SeTIChatService;
+import es.uc3m.setichat.service.SeTIChatServiceBinder;
+import es.uc3m.setichat.utils.ChatMessage;
+import es.uc3m.setichat.utils.XMLParser;
 
 /**
  * This is the main activity and its used to initialize all the SeTIChat features. 
@@ -48,13 +47,14 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private BroadcastReceiver chatMessageReceiver;
 	
 	// Needed variables
-	private boolean signedUp;;
+	private boolean signedUp;
+	private final String PREFERENCES_FILE = "SeTiChat-Settings";
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		
-		SharedPreferences settings = getPreferences(0);
+		SharedPreferences settings = getSharedPreferences(PREFERENCES_FILE, 0);
 		signedUp = settings.getBoolean("registered", false);
 		
 		try{
@@ -118,27 +118,32 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		if(!signedUp){
 			Intent signUp = new Intent();
 			signUp.setClass(this, SignUpActivity.class);
-			
 			startActivityForResult(signUp, 1);
-		}else{
-			// Otherwise, show main screen
-			setContentView(R.layout.activity_main);
-
-			// Set up the action bar to show tabs.
-			final ActionBar actionBar = getActionBar();
-			actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
-			// For each of the sections in the app, add a tab to the action bar.
-			actionBar.addTab(actionBar.newTab().setText(R.string.title_section1)
-					.setTabListener(this));
-			actionBar.addTab(actionBar.newTab().setText(R.string.title_section2)
-					.setTabListener(this));
-			actionBar.addTab(actionBar.newTab().setText(R.string.title_section2)
-					.setTabListener(this));
-			Log.i("Activty", "onCreate");
+		}else{ // Normal execution
+			startMainActivity();
 		}
 	}
 	
 	
+	private void startMainActivity() {
+		// TODO Auto-generated method stub
+		// Otherwise, show main screen
+		setContentView(R.layout.activity_main);
+
+		// Set up the action bar to show tabs.
+		final ActionBar actionBar = getActionBar();
+		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
+		// For each of the sections in the app, add a tab to the action bar.
+		actionBar.addTab(actionBar.newTab().setText(R.string.title_section1)
+				.setTabListener(this));
+		actionBar.addTab(actionBar.newTab().setText(R.string.title_section2)
+				.setTabListener(this));
+		actionBar.addTab(actionBar.newTab().setText(R.string.title_section2)
+				.setTabListener(this));
+		Log.i("Activty", "onCreate");
+	}
+
+
 	@Override
 	  public void onDestroy() {
 	    super.onDestroy();
@@ -153,12 +158,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	@Override
 	protected void onStop() {
 		super.onStop();
-		
-		// Saving user preferences
-		SharedPreferences settings = getPreferences(0);
-		SharedPreferences.Editor setEditor = settings.edit();
-		setEditor.putBoolean("registered", signedUp);
-		setEditor.commit();
 	}
 
 	@Override
@@ -170,7 +169,28 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data){
 		if(requestCode==1 && resultCode==RESULT_OK){
-			signedUp = data.getBooleanExtra("signedUp", false);
+			String mes = data.getStringExtra("message");
+			ChatMessage message = XMLParser.XMLtoMessage(mes);
+			// Saving user preferences
+			signedUp = true;
+			SharedPreferences settings = getSharedPreferences(PREFERENCES_FILE, 0);
+			SharedPreferences.Editor setEditor = settings.edit();
+			setEditor.putBoolean("registered", signedUp);
+			// Persist random number received from server as sourceId
+			String sourceId = message.getIdSource();
+			setEditor.putString("sourceId", sourceId);
+			setEditor.commit();
+			
+			// Call main activity layout and functionality
+			startMainActivity();
+		}else{
+			// Show error message saying something was wrong
+			Toast.makeText(getApplicationContext(), "Error during Sign Up process. Please try again", Toast.LENGTH_SHORT).show();
+			Log.e("SIGNUP", "Error signing up. Restarting process...");
+			// Restart SignUp Activity
+			Intent signUp = new Intent();
+			signUp.setClass(this, SignUpActivity.class);
+			startActivityForResult(signUp, 1);
 		}
 	}
 
