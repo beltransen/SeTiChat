@@ -105,7 +105,7 @@ public class SeTIChatService extends Service implements ChannelService {
 					 Log.i("Service connect", "Connect test");
 					 String key = keys[0];
 					 try {
-							channel = new ChannelAPI("http://setichatchannelapitest.appspot.com", key, current); //Production Example
+							channel = new ChannelAPI("http://setichat.appspot.com", key, current); //Production Example
 							channel.open();
 							
 						} catch (Exception e){
@@ -184,10 +184,16 @@ public class SeTIChatService extends Service implements ChannelService {
 		public void onMessage(String message) {
 			Log.i("onMessage", "Message received :"+message);
 			// Extract message type (server or user) to decide handler
-			//ChatMessage m = XMLParser.XMLtoMessage(message);
+			ChatMessage m = XMLParser.XMLtoMessage(message);
 			
 			// TODO Auto-generated method stub
-			String intentKey = "es.uc3m.SeTIChat.CHAT_MESSAGE";
+			String intentKey;
+			if(m.getType()==1){
+				intentKey = "es.uc3m.SeTIChat.SIGN_UP";
+			}else{
+				intentKey = "es.uc3m.SeTIChat.CHAT_INTERNALMESSAGE";
+			}
+			
 			Intent openIntent = new Intent(intentKey);
 			openIntent.setPackage("es.uc3m.setichat");
 			// Add message to intent

@@ -48,6 +48,10 @@ public class XMLParser {
 			//////////////////////////////////////////////////////////////////////////////
 			// Content
 			//////////////////////////////////////////////////////////////////////////////
+			// Tested
+			//		ChatMessage
+			//
+			//////////////////////////////////////////////////////////////////////////////			
 			
 			NodeList n2 = doc.getElementsByTagName("content");
 			Element content = (Element)n2.item(0);
@@ -57,19 +61,21 @@ public class XMLParser {
 			if(0 != nsignup.getLength())
 			{
 				Element signup = (Element) nsignup.item(0);
-				messageobj.setNick(getTextValue(signup, "nick"));
-				messageobj.setMobile((getTextValue(signup, "mobile")));
+				messageobj.setNick(getTextValue(signup, "nick").toString());
+				messageobj.setMobile((getTextValue(signup, "mobile").toString()));
 			}
 			
 			//Contact Request node
 			NodeList ncreq = content.getElementsByTagName("mobileList");
 			if(0 != ncreq.getLength())
-			{	
+			{
+				Element mobileListXML = (Element) ncreq.item(0);
+				NodeList mobiles = mobileListXML.getElementsByTagName("mobile");
 				String [] mobileList = new String [2];
-				Element mobile1 = (Element) ncreq.item(0);
-				mobileList[0] = mobile1.getNodeValue();
-				Element mobile2 = (Element) ncreq.item(1);
-				mobileList[1] = mobile2.getNodeValue();
+				Element mobile1 = (Element) mobiles.item(0);
+				mobileList[0] = mobile1.getTextContent();
+				Element mobile2 = (Element) mobiles.item(1);
+				mobileList[1] = mobile2.getTextContent();
 				
 				messageobj.setMobileList(mobileList);				
 			}
@@ -97,8 +103,7 @@ public class XMLParser {
 			NodeList ncon = content.getElementsByTagName("connection");
 			if(0 != ncon.getLength())
 			{	
-				Element chatmessage = (Element) ncon.item(0);
-				messageobj.setMobile(chatmessage.getNodeValue());			
+				//Empty node
 			}
 			
 			//Response
@@ -106,7 +111,7 @@ public class XMLParser {
 			if(0 != nresponse.getLength())
 			{	
 				Element response = (Element) nresponse.item(0);
-				messageobj.setResponseCode((byte) getIntValue(response, "responseCode"));
+				messageobj.setResponseCode(getIntValue(response, "responseCode"));
 				messageobj.setResponseMessage(getTextValue(response, "responseMessage"));
 			}	
 			
@@ -115,7 +120,7 @@ public class XMLParser {
 			if(0 != nrevoc.getLength())
 			{	
 				Element revoc = (Element) nrevoc.item(0);
-				messageobj.setRevokedMobile(revoc.getNodeValue());				
+				messageobj.setRevokedMobile(revoc.getTextContent());				
 			}	
 			
 			//Key Request
@@ -124,7 +129,8 @@ public class XMLParser {
 			{	
 				Element keyreq = (Element) nkeyreq.item(0);
 				// FALTA TYPE PARA KEY REQUEST
-				messageobj.setMobile(getTextValue(keyreq, "mobile"));				
+				messageobj.setMobile(getTextValue(keyreq, "mobile"));
+				messageobj.setPublicKey(getTextValue(keyreq, "type").equalsIgnoreCase("public"));
 			}				
 			
 			//Download
@@ -132,8 +138,8 @@ public class XMLParser {
 			if(0 != ndownload.getLength())
 			{	
 				Element down = (Element) ndownload.item(0);
-				// FALTA TYPE PARA DOWNLOAD
 				messageobj.setKey(getTextValue(down, "key"));		
+				messageobj.setPublicKey(getTextValue(down, "type").equalsIgnoreCase("public"));
 				messageobj.setMobile(getTextValue(down, "mobile"));
 			}	
 			
@@ -142,8 +148,8 @@ public class XMLParser {
 			if(0 != nupload.getLength())
 			{	
 				Element down = (Element) nupload.item(0);
-				// FALTA TYPE PARA DOWNLOAD
-				messageobj.setKey(getTextValue(down, "key"));		
+				messageobj.setKey(getTextValue(down, "key"));
+				messageobj.setPublicKey(getTextValue(down, "type").equalsIgnoreCase("public"));
 			}				
 			
 			

@@ -6,11 +6,14 @@ import es.uc3m.setichat.service.SeTIChatService;
 import android.app.Activity;
 import android.app.ListFragment;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
+import android.provider.ContactsContract;
 import android.util.Log;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ListView;
+import es.uc3m.setichat.service.SeTIChatService;
 
 
 /**

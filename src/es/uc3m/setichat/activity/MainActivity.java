@@ -19,6 +19,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.v4.app.FragmentActivity;
@@ -46,23 +47,15 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private BroadcastReceiver openReceiver;
 	private BroadcastReceiver chatMessageReceiver;
 	
+	// Needed variables
+	private boolean signedUp;;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		setContentView(R.layout.activity_main);
-
-		// Set up the action bar to show tabs.
-		final ActionBar actionBar = getActionBar();
-		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
-		// For each of the sections in the app, add a tab to the action bar.
-		actionBar.addTab(actionBar.newTab().setText(R.string.title_section1)
-				.setTabListener(this));
-		actionBar.addTab(actionBar.newTab().setText(R.string.title_section2)
-				.setTabListener(this));
-		actionBar.addTab(actionBar.newTab().setText(R.string.title_section2)
-				.setTabListener(this));
-		Log.i("Activty", "onCreate");
+		
+		SharedPreferences settings = getPreferences(0);
+		signedUp = settings.getBoolean("registered", false);
 		
 		try{
 	        
@@ -107,7 +100,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			    	Toast toast = Toast.makeText(context, "Message from server", Toast.LENGTH_SHORT);
 					toast.show();
 					// Add phone and message type information to the intent (with addCategory) 
-					intent.addCategory("chat");
+					intent.setAction("es.uc3m.SeTIChat.CHAT_MESSAGE");
 					System.out.println(intent.getCategories());
 					// Broadcast message
 					context.sendBroadcast(intent); 
@@ -115,10 +108,34 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			  };
 			  
 		IntentFilter chatMessageFilter = new IntentFilter();
-		chatMessageFilter.addAction("es.uc3m.SeTIChat.CHAT_MESSAGE");
+		chatMessageFilter.addAction("es.uc3m.SeTIChat.CHAT_INTERNALMESSAGE");
 		//chatMessageFilter.addCategory("main");
 		registerReceiver(chatMessageReceiver, chatMessageFilter);
 
+		// Check User is signed up
+		
+		// If it is user's first time, show sign up screen
+		if(!signedUp){
+			Intent signUp = new Intent();
+			signUp.setClass(this, SignUpActivity.class);
+			
+			startActivityForResult(signUp, 1);
+		}else{
+			// Otherwise, show main screen
+			setContentView(R.layout.activity_main);
+
+			// Set up the action bar to show tabs.
+			final ActionBar actionBar = getActionBar();
+			actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
+			// For each of the sections in the app, add a tab to the action bar.
+			actionBar.addTab(actionBar.newTab().setText(R.string.title_section1)
+					.setTabListener(this));
+			actionBar.addTab(actionBar.newTab().setText(R.string.title_section2)
+					.setTabListener(this));
+			actionBar.addTab(actionBar.newTab().setText(R.string.title_section2)
+					.setTabListener(this));
+			Log.i("Activty", "onCreate");
+		}
 	}
 	
 	
@@ -136,6 +153,12 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	@Override
 	protected void onStop() {
 		super.onStop();
+		
+		// Saving user preferences
+		SharedPreferences settings = getPreferences(0);
+		SharedPreferences.Editor setEditor = settings.edit();
+		setEditor.putBoolean("registered", signedUp);
+		setEditor.commit();
 	}
 
 	@Override
@@ -144,6 +167,12 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		super.onResume();
 	}
 
+	@Override
+	protected void onActivityResult(int requestCode, int resultCode, Intent data){
+		if(requestCode==1 && resultCode==RESULT_OK){
+			signedUp = data.getBooleanExtra("signedUp", false);
+		}
+	}
 
 
 	

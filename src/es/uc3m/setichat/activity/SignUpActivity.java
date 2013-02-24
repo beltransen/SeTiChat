@@ -5,7 +5,10 @@ import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.database.sqlite.SQLiteDatabase;
+import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -81,6 +84,7 @@ public class SignUpActivity extends Activity {
 		
 		nick = (EditText) findViewById(R.id.nick);
 		phone = (EditText) findViewById(R.id.phone);
+		button = (Button) findViewById(R.id.sign_up_button);
 		
 		button.setOnClickListener(new View.OnClickListener() {
 			@Override
@@ -88,9 +92,9 @@ public class SignUpActivity extends Activity {
 				String nickname = nick.getText().toString();
 				String phoneNumber = phone.getText().toString();
 				// Check both fields have been filled
-				if(!nickname.equalsIgnoreCase("") || !phoneNumber.equalsIgnoreCase("")){
+				if(nickname.equalsIgnoreCase("") || phoneNumber.equalsIgnoreCase("")){
 					// Show error message
-					Log.i("SIGNUP", "Error in Sign Up. Nick and Phone fields are mandatory");
+					Log.e("SIGNUP", "Error in Sign Up. Nick and Phone fields are mandatory");
 				}
 				signUp(nickname,phoneNumber);
 			}	
@@ -99,12 +103,14 @@ public class SignUpActivity extends Activity {
 		chatMessageReceiver = new BroadcastReceiver (){
 			@Override
 		    public void onReceive(Context context, Intent intent) {
+				Log.i("SIGNUP", "MESSAGE RECEIVED");
 				// Get message from intent and cast into an object
-				ChatMessage mes = XMLParser.XMLtoMessage(intent.getStringExtra("message"));
+				 ChatMessage mes = XMLParser.XMLtoMessage(intent.getStringExtra("message"));
 				
 				// Check message code
 				if(mes.getResponseCode()==201){
 					// Persist random number received from server as sourceId
+					
 					
 					Log.i("SIGNUP", "Signed up successfully");
 				}else{
@@ -117,6 +123,11 @@ public class SignUpActivity extends Activity {
 				
 		    }
 		};
+		
+		IntentFilter filter = new IntentFilter();
+		filter.addAction("es.uc3m.SeTIChat.SIGN_UP");
+		
+		registerReceiver(chatMessageReceiver, filter);
 	}
 
 	@Override
