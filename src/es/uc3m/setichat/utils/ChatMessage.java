@@ -1,5 +1,7 @@
 package es.uc3m.setichat.utils;
 
+import java.util.ArrayList;
+
 public class ChatMessage {
 	
 	// Constructor
@@ -7,7 +9,7 @@ public class ChatMessage {
 	
 	public ChatMessage(String idSource, String idDestination, String idMessage,
 			boolean encrypted, boolean signed, byte type, String nick,
-			String mobile, String[] mobileList, String[][] contactList,
+			String mobile, String[] mobileList, ArrayList<String[]> contactList,
 			String chatMessage, byte responseCode, String responseMessage,
 			String revokedMobile, boolean publicKey, String key,
 			byte[] signature) {
@@ -48,7 +50,7 @@ public class ChatMessage {
 	private String[] mobileList;
 	
 	// Contact Response
-	private String [][] contactList;
+	private ArrayList<String[]> contactList;
 	
 	// Chat message
 	private String chatMessage;
@@ -152,11 +154,11 @@ public class ChatMessage {
 		this.mobileList = mobileList;
 	}
 
-	public String[][] getContactList() {
+	public ArrayList<String[]> getContactList() {
 		return contactList;
 	}
 
-	public void setContactList(String[][] contactList) {
+	public void setContactList(ArrayList<String[]> contactList) {
 		this.contactList = contactList;
 	}
 
