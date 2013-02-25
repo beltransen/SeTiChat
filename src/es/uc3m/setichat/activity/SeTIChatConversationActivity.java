@@ -5,6 +5,8 @@ import java.sql.Time;
 import es.uc3m.setichat.service.SeTIChatService;
 import es.uc3m.setichat.service.SeTIChatServiceBinder;
 import es.uc3m.setichat.utils.ChatMessage;
+import es.uc3m.setichat.utils.DatabaseManager;
+import es.uc3m.setichat.utils.datamodel.Contact;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -13,6 +15,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.util.Log;
@@ -48,6 +51,8 @@ public class SeTIChatConversationActivity extends Activity {
 
 	private SeTIChatService mService;
 	private BroadcastReceiver chatMessageReceiver;
+	
+	private String idDestination;
 	
 
 	private ServiceConnection mConnection = new ServiceConnection() {
@@ -93,22 +98,40 @@ public class SeTIChatConversationActivity extends Activity {
 			bindService(new Intent(SeTIChatConversationActivity.this,
 					SeTIChatService.class), mConnection,
 					Context.BIND_AUTO_CREATE);
+			
 		} else {
 			render();
 		}
 		
 
+		int id = getIntent().getIntExtra("position", -1);
+		DatabaseManager dbm = new DatabaseManager(this);
+		Contact contact = new Contact();
+		if(id != -1)
+		{
+			contact = dbm.getContact(id);
+		}else
+		{
+			Log.e("SeTIChatConversationActivity", "Error retrieving conversation intent");
+		}
+		dbm.close();
+		
 		chatMessageReceiver = new BroadcastReceiver() {
 		    @Override
 		    public void onReceive(Context context, Intent intent) {
+		    	
+		    	//On open conversation, retrieve remote owner
+		    	
 				// Append message contained in the Intent to message list
 		    	String m = intent.getStringExtra("message");
-				text.append(m+"\n");
+				text.append(m+"\n");				
 		    }
 		  };
 			  
 		IntentFilter chatMessageFilter = new IntentFilter();
 		chatMessageFilter.addAction("es.uc3m.SeTIChat.CHAT_MESSAGE");
+		chatMessageFilter.addCategory(contact.getIdDestination());
+		idDestination = contact.getIdDestination();
 		// Add Phone number as category to filter messages (taken from ContactList View)
 		
 		registerReceiver(chatMessageReceiver, chatMessageFilter);
@@ -213,8 +236,19 @@ public class SeTIChatConversationActivity extends Activity {
 
 				Time time = new Time(System.currentTimeMillis());
 				// Convert message to XML format
-				//ChatMessage m = new ChatMessage(idSource, idDestination, idMessage, encrypted, signed, type, nick, mobile, mobileList, contactList, chatMessage, responseCode, responseMessage, revokedMobile, publicKey, key, signature)
-				mService.sendMessage(edit.getText().toString());
+				//ChatMessage(idSource, idDestination, idMessage, encrypted, signed, type, nick, mobile, mobileList, contactList, chatMessage, responseCode, responseMessage, revokedMobile, publicKey, key, signature)
+				String message = edit.getText().toString();
+				ChatMessage objmessage = new ChatMessage();
+				objmessage.setType(4);
+				objmessage.setEncrypted(false);
+				objmessage.setSigned(false);
+				objmessage.setChatMessage(message);
+				objmessage.setIdDestination(idDestination);
+				SharedPreferences settings = getSharedPreferences("SeTiChat-Settings", 0);				
+				objmessage.setIdSource(settings.getString("sourceId", null));
+				//objmessage.set
+				
+				mService.sendMessage(objmessage.toString());
 				// Refresh textview
 				text.append(edit.getText().toString() + " at " + time+"\n");
 				edit.setText("");
