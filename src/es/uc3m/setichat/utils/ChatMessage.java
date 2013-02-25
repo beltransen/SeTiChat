@@ -1,12 +1,20 @@
 package es.uc3m.setichat.utils;
 
 import java.util.ArrayList;
+import org.apache.commons.lang.RandomStringUtils;
 
 public class ChatMessage {
 	
 	// Constructor
-	public ChatMessage(){}
+	public ChatMessage(){
+		this.idMessage = getNewId();
+	}
 	
+	private String getNewId() {
+		// TODO Auto-generated method stub
+		return RandomStringUtils.random(16);
+	}
+
 	public ChatMessage(String idSource, String idDestination, String idMessage,
 			boolean encrypted, boolean signed, byte type, String nick,
 			String mobile, String[] mobileList, ArrayList<String[]> contactList,

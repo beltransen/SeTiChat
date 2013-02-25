@@ -1,10 +1,10 @@
 package es.uc3m.setichat.utils;
 
 import java.io.StringReader;
+import java.util.ArrayList;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -90,9 +90,15 @@ public class XMLParser {
 			if(0 != ncresp.getLength())
 			{	
 				Element contactList = (Element) ncresp.item(0);
-				Element cresp = (Element) contactList.getElementsByTagName("contact").item(0);
-				messageobj.setNick(getTextValue(cresp, "nick"));
-				messageobj.setMobile((getTextValue(cresp, "mobile")));			
+				NodeList cresp = contactList.getElementsByTagName("contact");
+				ArrayList<String[]> list = new ArrayList<String[]>();
+				if(0 != cresp.getLength()){
+					for(int i=0; i<cresp.getLength(); i++){
+						Element contact = (Element) cresp.item(i);
+						list.add(new String[]{getTextValue(contact, "nick"), getTextValue(contact, "mobile")});
+					}
+				}
+				messageobj.setContactList(list);
 			}
 			
 			//Chat Message

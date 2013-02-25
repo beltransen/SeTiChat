@@ -7,6 +7,7 @@ import es.uc3m.setichat.service.SeTIChatService;
 import android.app.Activity;
 import android.app.ListFragment;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.os.Bundle;
@@ -56,10 +57,15 @@ public class ContactsFragment extends ListFragment {
 		super.onCreate(savedInstanceState);
 		// Populate list with contacts.
 		// Ey, a more fancy layout could be used! You dare?!
-		DatabaseManager dbm = new DatabaseManager(getActivity());
-		//int i = dbm.getContactsCount();
-		//Contact contact = new Contact(1,"idsource","Listed number 2");
+		DatabaseManager dbm = new DatabaseManager(getActivity());		
+		int id = dbm.getContactsCount();
+		//SharedPreferences settings = getActivity().getSharedPreferences("SeTiChat-Settings", 0);
+		//Contact contact = new Contact(id,"100309236.100309238", "Erasmus 1");								
+		//Contact contact3 = new Contact(id,"100309238.100309236", "Erasmus 2");
+		//Contact contact2 = new Contact(id + 1,"100276600.100277382", "Jorge");
 		//dbm.addContact(contact);
+		//dbm.addContact(contact2);
+		//dbm.addContact(contact3);
 		//int j = dbm.getContactsCount();
 		List<Contact> list = dbm.getAllContacts();
 		dbm.close();

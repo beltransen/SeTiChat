@@ -55,6 +55,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	// Needed variables
 	private boolean signedUp;
 	private final String PREFERENCES_FILE = "SeTiChat-Settings";
+	private final String SERVER_NAME = "setichat@appspot.com";
 	private static ContentResolver cr;
 	
 	@Override
@@ -63,21 +64,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		SharedPreferences settings = getSharedPreferences(PREFERENCES_FILE, 0);
 		signedUp = settings.getBoolean("registered", false);
 		
-		try{
-	        // Make sure the service is started.  It will continue running
-	        // until someone calls stopService().  The Intent we use to find
-	        // the service explicitly specifies our service component, because
-	        // we want it running in our own process and don't want other
-	        // applications to replace it.
-	        startService(new Intent(MainActivity.this,
-	                SeTIChatService.class));
-        }catch(Exception e){
-
-    		Log.d("MainActivity", "Unknown Error", e);
-
-	        stopService(new Intent(MainActivity.this,
-	                SeTIChatService.class));
-        }
 		
 		// Create and register broadcast receivers
 		IntentFilter openFilter = new IntentFilter();
@@ -100,42 +86,13 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		  chatMessageReceiver = new BroadcastReceiver() {
 			    @Override
 			    public void onReceive(Context context, Intent intent) {
-			    	if(!signedUp){
-				    	ChatMessage mes = XMLParser.XMLtoMessage(intent.getStringExtra("message"));
-						// Check message code
-						if(mes.getResponseCode()==201){
-							Log.i("SIGNUP", "Signed up successfully");
-							signedUp = true;
-							SharedPreferences settings = getSharedPreferences(PREFERENCES_FILE, 0);
-							SharedPreferences.Editor setEditor = settings.edit();
-							setEditor.putBoolean("registered", signedUp);
-							// Persist random number received from server as sourceId
-							String sourceId = mes.getIdSource();
-							setEditor.putString("sourceId", sourceId);
-							setEditor.commit();
-							
-							// Call main activity layout and functionality
-							startMainActivity();
-						}else{
-							// Show error message saying something was wrong
-							Toast.makeText(getApplicationContext(), "Error during Sign Up process. Please try again", Toast.LENGTH_SHORT).show();
-							Log.e("SIGNUP", "Error signing up. Restarting process...");
-							// Restart SignUp Activity
-							Intent signUp = new Intent();
-							signUp.setClass(getApplicationContext(), SignUpActivity.class);
-							startActivityForResult(signUp, 1);
-						}
-						
-			    	}
-			    	
-			    
-			    		Toast toast = Toast.makeText(context, "Message from server", Toast.LENGTH_SHORT);
-						toast.show();
-						// Add phone and message type information to the intent (with addCategory) 
-						intent.setAction("es.uc3m.SeTIChat.CHAT_MESSAGE");
-						System.out.println(intent.getCategories());
-						// Broadcast message
-						context.sendBroadcast(intent); 
+		    		Toast toast = Toast.makeText(context, "Message from server", Toast.LENGTH_SHORT);
+					toast.show();
+					// Add phone and message type information to the intent (with addCategory) 
+					intent.setAction("es.uc3m.SeTIChat.CHAT_MESSAGE");
+					System.out.println(intent.getCategories());
+					// Broadcast message
+					context.sendBroadcast(intent); 
 			   }
 		  };
 			  
@@ -146,22 +103,53 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		registerReceiver(chatMessageReceiver, chatMessageFilter);
 		cr = getContentResolver();
 		
-		// Check User is signed up
-		// If it is user's first time, show sign up screen
-		if(!signedUp){
-			Intent signUp = new Intent();
-			signUp.setClass(this, SignUpActivity.class);
-			startActivityForResult(signUp, 1);
-		}else{
-			// Normal execution
-			startMainActivity();
-		}
+
+		try{
+	        // Make sure the service is started.  It will continue running
+	        // until someone calls stopService().  The Intent we use to find
+	        // the service explicitly specifies our service component, because
+	        // we want it running in our own process and don't want other
+	        // applications to replace it.
+	        startService(new Intent(MainActivity.this,
+	                SeTIChatService.class));
+	        bindService(new Intent(MainActivity.this,
+					SeTIChatService.class), mConnection,
+					Context.BIND_AUTO_CREATE);
+        }catch(Exception e){
+
+    		Log.d("MainActivity", "Unknown Error", e);
+
+	        stopService(new Intent(MainActivity.this,
+	                SeTIChatService.class));
+        }
+		
 	}
 	
 	
 	private void startMainActivity() {
-		// TODO Auto-generated method stub
-		// Otherwise, show main screen
+		// Check for new contacts
+		ArrayList<String[]> contactList = getContacts();
+		String[] mobileList = new String[contactList.size()]; 
+		
+		for(int i = 0; i<contactList.size(); i++){
+			mobileList[i] = contactList.get(i)[1];
+		}
+		
+		ChatMessage contactRequest = new ChatMessage();
+		contactRequest.setIdSource(getSource());
+		contactRequest.setIdDestination(SERVER_NAME);
+		contactRequest.setType(2);
+		contactRequest.setEncrypted(false);
+		contactRequest.setSigned(false);
+		
+		contactRequest.setMobileList(mobileList);
+		
+		String message =  contactRequest.toString();
+		//"<?xml version=\"1.0\" encoding=\"UTF-8\"?> <message><header><idSource>0616C4EF3D430243C3D34E9E68C60BC1</idSource> <idDestination>setichat@appspot.com</idDestination> <idMessage>2d46f3c49a2c6b7a2</idMessage> <type>2</type><encrypted>false</encrypted><signed>false</signed></header> <content><mobileList> <mobile>100277382.100276644</mobile> <mobile>100309236.100309238</mobile> </mobileList></content> </message>";
+		
+		// Send contact request
+		mService.sendMessage(message);
+		
 		// Set up the action bar to show tabs.
 		final ActionBar actionBar = getActionBar();
 		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
@@ -175,6 +163,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		Log.i("Activity", "onCreate");
 		
 		setContentView(R.layout.activity_main);
+		
+		
 	}
 
 
@@ -192,6 +182,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	@Override
 	protected void onStop() {
 		super.onStop();
+		unbindService(mConnection);
+		unregisterReceiver(chatMessageReceiver);
+		unregisterReceiver(openReceiver);
 	}
 
 	@Override
@@ -284,16 +277,23 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	        	Log.i("Service Connection", "Estamos en onServiceConnected");
 	            SeTIChatServiceBinder binder = (SeTIChatServiceBinder) service;
 	            mService = binder.getService();
+	         // Check User is signed up
+	    		// If it is user's first time, show sign up screen
+	    		if(!signedUp){
+	    			Intent signUp = new Intent();
+	    			signUp.setClass(getApplicationContext(), SignUpActivity.class);
+	    			startActivityForResult(signUp, 1);
+	    		}else{
+	    			startMainActivity();
+	    		}
+	            
 	        }
-
 	        @Override
 	        public void onServiceDisconnected(ComponentName arg0) {
 	        	
 	        }
 	    };
 	    
-
-
 
 	public SeTIChatService getService() {
 		// TODO Auto-generated method stub
@@ -335,19 +335,25 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		        /** Phone Number **/
 		        Cursor pCur = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
 		        ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?", new String[] { id }, null);
-		        pCur.moveToNext();
+		        if(pCur.moveToNext()){
+		        	//Get first phone.  Extend to get all types of phones for the same contact?
+			        result [1] = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));		        
+			        //String typeStr = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.TYPE));
+			        
+			        pCur.close();
+			        resultlist.add(result);
+		        }
 		        
-		        //Get first phone.  Extend to get all types of phones for the same contact?
-		        result [1] = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));		        
-		        //String typeStr = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.TYPE));
 		        
-		        pCur.close();
-		        resultlist.add(result);
 		    }
 		}
 		
 		return resultlist;
-		}
+	}
 	
+	public String getSource(){
+		SharedPreferences settings = getSharedPreferences(PREFERENCES_FILE, 0);
+		return settings.getString("sourceId", "");
+	}
 
 }

@@ -153,6 +153,33 @@ public class DatabaseManager extends SQLiteOpenHelper{
 	    return convList;
 	}
 	 
+	 // Getting All Contacts
+	 public List<Conversation> getAllConversations(String idsource) {
+	    List<Conversation> convList = new ArrayList<Conversation>();
+	    // Select All Query
+	    String selectQuery = "SELECT * FROM " + TABLE_CONVERSATIONS + " WHERE " + CONVERSATION_IDSOURCE
+	    		+ "='" + idsource +"'";
+	 
+	    SQLiteDatabase db = this.getWritableDatabase();
+	    Cursor cursor = db.rawQuery(selectQuery, null);
+	 
+	    // looping through all rows and adding to list
+	    if (cursor.moveToFirst()) {
+	        do {
+	            Conversation conv = new Conversation();
+	            conv.setID(Integer.parseInt(cursor.getString(0)));	            
+	            conv.setidsource(cursor.getString(1));
+	            conv.setText(cursor.getString(2));
+	            conv.setDate(cursor.getString(3));
+	            // Adding conv to list
+	            convList.add(conv);
+	        } while (cursor.moveToNext());
+	    }
+	 
+	    // return contact list
+	    return convList;
+	}	 
+	 
 	// Getting contacts Count
 	    public int getContactsCount() {
 	        String countQuery = "SELECT  * FROM " + TABLE_CONTACTS;
@@ -181,6 +208,27 @@ public class DatabaseManager extends SQLiteOpenHelper{
 	    public Contact getContact(int id) {
 	        String countQuery = "SELECT  * FROM " + TABLE_CONTACTS + " WHERE " + CONTACT_ID
 	        		+ " = " + id;
+	        SQLiteDatabase db = this.getReadableDatabase();
+	        Cursor cursor = db.rawQuery(countQuery, null);
+	        int count = cursor.getCount();
+	        Contact result = new Contact();
+	        if(count != 0){
+	        	cursor.moveToFirst();
+	        	result.setId(cursor.getInt(0));
+	        	result.setIdDestination(cursor.getString(1));
+	        	result.setName(cursor.getString(2));
+	        	//cursor.getString(0);
+	        }
+	        cursor.close();
+	 
+	        // return count
+	        return result;
+	    }
+	    
+		 // Getting convesation Count
+	    public Contact getContact(String idsource) {
+	        String countQuery = "SELECT  * FROM " + TABLE_CONTACTS + " WHERE " + CONTACT_IDDESTINATION
+	        		+ " ='" + idsource + "'";
 	        SQLiteDatabase db = this.getReadableDatabase();
 	        Cursor cursor = db.rawQuery(countQuery, null);
 	        int count = cursor.getCount();

@@ -1,12 +1,16 @@
 package es.uc3m.setichat.activity;
 
 import java.sql.Time;
+import java.util.Calendar;
+import java.util.List;
 
 import es.uc3m.setichat.service.SeTIChatService;
 import es.uc3m.setichat.service.SeTIChatServiceBinder;
 import es.uc3m.setichat.utils.ChatMessage;
 import es.uc3m.setichat.utils.DatabaseManager;
+import es.uc3m.setichat.utils.XMLParser;
 import es.uc3m.setichat.utils.datamodel.Contact;
+import es.uc3m.setichat.utils.datamodel.Conversation;
 
 import android.app.Activity;
 import android.content.BroadcastReceiver;
@@ -114,6 +118,9 @@ public class SeTIChatConversationActivity extends Activity {
 		{
 			Log.e("SeTIChatConversationActivity", "Error retrieving conversation intent");
 		}
+		
+
+		
 		dbm.close();
 		
 		chatMessageReceiver = new BroadcastReceiver() {
@@ -124,7 +131,7 @@ public class SeTIChatConversationActivity extends Activity {
 		    	
 				// Append message contained in the Intent to message list
 		    	String m = intent.getStringExtra("message");
-				text.append(m+"\n");				
+				text.append("\u2713 \n");				
 		    }
 		  };
 			  
@@ -197,6 +204,24 @@ public class SeTIChatConversationActivity extends Activity {
 		text.setLayoutParams(new FrameLayout.LayoutParams(
 				LayoutParams.FILL_PARENT, LayoutParams.FILL_PARENT));
 		text.setPadding(padding, padding, padding, 0);
+		
+		//Get previous conversations
+		DatabaseManager dbm = new DatabaseManager(this);
+		List<Conversation> conv = dbm.getAllConversations(idDestination);
+		if(conv != null)
+		{
+			for(Conversation item : conv){
+				String message = item.getText();
+				ChatMessage content = XMLParser.XMLtoMessage(message);
+				if(content.getType() == 4)
+				{
+					text.append(content.getChatMessage() + " on " +item.getDate() + "\n");
+				}
+				
+		}
+		}
+		
+		dbm.close();
 		//text.setId(R.id.conversation);
 		// Adding some scroll
 		scroller = new ScrollView(this);
@@ -243,14 +268,24 @@ public class SeTIChatConversationActivity extends Activity {
 				objmessage.setEncrypted(false);
 				objmessage.setSigned(false);
 				objmessage.setChatMessage(message);
-				objmessage.setIdDestination(idDestination);
+				objmessage.setIdMessage("2d46f3c49a2c6b7a2");
+				objmessage.setIdDestination(idDestination);				
 				SharedPreferences settings = getSharedPreferences("SeTiChat-Settings", 0);				
 				objmessage.setIdSource(settings.getString("sourceId", null));
+				
+				DatabaseManager dbm = new DatabaseManager(getApplicationContext());
+				Conversation conv = new Conversation();
+				conv.setidsource(objmessage.getIdDestination());
+				conv.setText(objmessage.toString());
+				conv.setDate(Calendar.getInstance().getTime().toString());
+				conv.setID(dbm.getConversationsCount());
+				dbm.addConversation(conv);
+				dbm.close();
 				//objmessage.set
 				
 				mService.sendMessage(objmessage.toString());
 				// Refresh textview
-				text.append(edit.getText().toString() + " at " + time+"\n");
+				text.append(edit.getText().toString() + " at " + time );
 				edit.setText("");
 				
 			}

@@ -3,12 +3,8 @@ package es.uc3m.setichat.service;
 
 
 import java.io.IOException;
+import java.util.ArrayList;
 
-
-import edu.gvsu.cis.masl.channelAPI.ChannelAPI;
-import edu.gvsu.cis.masl.channelAPI.ChannelService;
-import es.uc3m.setichat.utils.ChatMessage;
-import es.uc3m.setichat.utils.XMLParser;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -16,6 +12,12 @@ import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.IBinder;
 import android.util.Log;
+import edu.gvsu.cis.masl.channelAPI.ChannelAPI;
+import edu.gvsu.cis.masl.channelAPI.ChannelService;
+import es.uc3m.setichat.utils.ChatMessage;
+import es.uc3m.setichat.utils.DatabaseManager;
+import es.uc3m.setichat.utils.XMLParser;
+import es.uc3m.setichat.utils.datamodel.Contact;
 
 /**
  * This service is used to connecto to the SeTIChat server. 
@@ -37,7 +39,7 @@ public class SeTIChatService extends Service implements ChannelService {
 	// Needed variables
 	private boolean signedUp;
 	private final String PREFERENCES_FILE = "SeTiChat-Settings";
-	private final String phoneNumber = "100276600.100277382";
+	private final String phoneNumber = "100276600.100277700";
 
 	
 	public SeTIChatService() {
@@ -196,13 +198,25 @@ public class SeTIChatService extends Service implements ChannelService {
 			Log.i("onMessage", "Message received :"+message);
 			// Extract message type (server or user) to decide handler
 			ChatMessage m = XMLParser.XMLtoMessage(message);
-			
+
+		    SharedPreferences settings = this.getSharedPreferences(	PREFERENCES_FILE, 0);
+			signedUp = settings.getBoolean("registered", false);
 			// TODO Auto-generated method stub
 			String intentKey = "";
 			if(!signedUp){
 				intentKey = "es.uc3m.SeTIChat.SIGN_UP";
 			}else{
-				intentKey = "es.uc3m.SeTIChat.CHAT_INTERNALMESSAGE";
+				if(m.getType()==3){ //Contact response
+					ArrayList<String[]> contacts = m.getContactList();
+					DatabaseManager dbm = new DatabaseManager(getApplicationContext());
+					for(int i = 0; i<contacts.size(); i++){
+						String [] c = contacts.get(i);
+						Contact contact = new Contact(dbm.getContactsCount(), c[1], c[0]);
+						dbm.addContact(contact);
+					}
+				}else{
+					intentKey = "es.uc3m.SeTIChat.CHAT_INTERNALMESSAGE";
+				}
 			}
 			
 			
