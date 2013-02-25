@@ -44,7 +44,7 @@ public class XMLParser {
 
 			messageobj.setIdSource(getTextValue(header,"idSource"));
 			messageobj.setIdDestination(getTextValue(header,"idDestination"));
-			messageobj.setIdMessage(getTextValue(header,"idMessage").getBytes());
+			messageobj.setIdMessage(getTextValue(header,"idMessage"));
 			messageobj.setEncrypted(getTextValue(header,"encrypted").equalsIgnoreCase("true"));
 			messageobj.setSigned(getTextValue(header,"signed").equalsIgnoreCase("true"));
 			messageobj.setType((byte) getIntValue(header, "type"));
