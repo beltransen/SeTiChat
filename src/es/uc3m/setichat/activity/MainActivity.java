@@ -4,19 +4,24 @@ package es.uc3m.setichat.activity;
 
 
 
+import java.util.ArrayList;
+
 import android.app.ActionBar;
 import android.app.ActionBar.Tab;
 import android.app.AlertDialog;
 import android.app.FragmentTransaction;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
+import android.content.ContentResolver;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.content.SharedPreferences;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.os.IBinder;
+import android.provider.ContactsContract;
 import android.support.v4.app.FragmentActivity;
 import android.util.Log;
 import android.view.Menu;
@@ -43,8 +48,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private SeTIChatService mService;
 	private static final String STATE_SELECTED_NAVIGATION_ITEM = "selected_navigation_item";
 	
-	private boolean DEBUG = false;
-	
 	// Receivers that wait for notifications from the SeTIChat server
 	private BroadcastReceiver openReceiver;
 	private BroadcastReceiver chatMessageReceiver;
@@ -52,6 +55,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	// Needed variables
 	private boolean signedUp;
 	private final String PREFERENCES_FILE = "SeTiChat-Settings";
+	private static ContentResolver cr;
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -96,6 +100,34 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		  chatMessageReceiver = new BroadcastReceiver() {
 			    @Override
 			    public void onReceive(Context context, Intent intent) {
+			    	if(!signedUp){
+				    	ChatMessage mes = XMLParser.XMLtoMessage(intent.getStringExtra("message"));
+						// Check message code
+						if(mes.getResponseCode()==201){
+							Log.i("SIGNUP", "Signed up successfully");
+							signedUp = true;
+							SharedPreferences settings = getSharedPreferences(PREFERENCES_FILE, 0);
+							SharedPreferences.Editor setEditor = settings.edit();
+							setEditor.putBoolean("registered", signedUp);
+							// Persist random number received from server as sourceId
+							String sourceId = mes.getIdSource();
+							setEditor.putString("sourceId", sourceId);
+							setEditor.commit();
+							
+							// Call main activity layout and functionality
+							startMainActivity();
+						}else{
+							// Show error message saying something was wrong
+							Toast.makeText(getApplicationContext(), "Error during Sign Up process. Please try again", Toast.LENGTH_SHORT).show();
+							Log.e("SIGNUP", "Error signing up. Restarting process...");
+							// Restart SignUp Activity
+							Intent signUp = new Intent();
+							signUp.setClass(getApplicationContext(), SignUpActivity.class);
+							startActivityForResult(signUp, 1);
+						}
+						
+			    	}
+			    	
 			    
 			    		Toast toast = Toast.makeText(context, "Message from server", Toast.LENGTH_SHORT);
 						toast.show();
@@ -109,9 +141,11 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			  
 		IntentFilter chatMessageFilter = new IntentFilter();
 		chatMessageFilter.addAction("es.uc3m.SeTIChat.CHAT_INTERNALMESSAGE");
+		
 		//chatMessageFilter.addCategory("main");
 		registerReceiver(chatMessageReceiver, chatMessageFilter);
-
+		cr = getContentResolver();
+		
 		// Check User is signed up
 		// If it is user's first time, show sign up screen
 		if(!signedUp){
@@ -257,6 +291,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	        	
 	        }
 	    };
+	    
 
 
 
@@ -275,6 +310,44 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		Toast toast = Toast.makeText(context, text, duration);
 		toast.show();
 	}
+	
+	/**
+	 * Method that retrieves all contacts and retrieves name
+	 * and phone for each one of them.  May be extended to retrieve
+	 * more information
+	 * 
+	 * @return A list of String[]
+	 * 
+	 * Each String[] has
+	 * String[0] - Contact Name
+	 * String[1] - Contact Phone Number
+	 */
+	public ArrayList<String[]> getContacts() {
+		Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
+		String [] result = new String[2];
+		ArrayList<String []> resultlist = new ArrayList<String[]>();
+		if (cur.getCount() > 0) {
+		    while (cur.moveToNext()) {
+		    // read id
+		        String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
+		        /** Read name **/
+		        result [0] = cur.getString(cur.getColumnIndex(ContactsContract.Contacts.DISPLAY_NAME));
+		        /** Phone Number **/
+		        Cursor pCur = cr.query(ContactsContract.CommonDataKinds.Phone.CONTENT_URI, null,
+		        ContactsContract.CommonDataKinds.Phone.CONTACT_ID + " = ?", new String[] { id }, null);
+		        pCur.moveToNext();
+		        
+		        //Get first phone.  Extend to get all types of phones for the same contact?
+		        result [1] = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));		        
+		        //String typeStr = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.TYPE));
+		        
+		        pCur.close();
+		        resultlist.add(result);
+		    }
+		}
+		
+		return resultlist;
+		}
 	
 
 }
