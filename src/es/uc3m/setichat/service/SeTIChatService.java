@@ -4,20 +4,31 @@ package es.uc3m.setichat.service;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.List;
 
+import android.R;
+import android.app.ActivityManager;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.os.AsyncTask;
 import android.os.IBinder;
+import android.support.v4.app.NotificationCompat;
+import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
 import edu.gvsu.cis.masl.channelAPI.ChannelAPI;
 import edu.gvsu.cis.masl.channelAPI.ChannelService;
+import es.uc3m.setichat.activity.SeTIChatConversationActivity;
 import es.uc3m.setichat.utils.ChatMessage;
 import es.uc3m.setichat.utils.DatabaseManager;
 import es.uc3m.setichat.utils.XMLParser;
 import es.uc3m.setichat.utils.datamodel.Contact;
+import es.uc3m.setichat.utils.datamodel.Conversation;
 
 /**
  * This service is used to connecto to the SeTIChat server. 
@@ -219,6 +230,13 @@ public class SeTIChatService extends Service implements ChannelService {
 					}
 					dbm.close();
 				}else{
+					
+					DatabaseManager dbm = new DatabaseManager(this);					
+					Conversation conv = new Conversation(dbm.getConversationsCount(), "", Calendar.getInstance().getTime().toString(), m.getIdSource());
+					dbm.addConversation(conv);
+					dbm.close();
+					
+					
 					intentKey = "es.uc3m.SeTIChat.CHAT_INTERNALMESSAGE";
 					Intent openIntent = new Intent(intentKey);
 					openIntent.setPackage("es.uc3m.setichat");
@@ -226,11 +244,65 @@ public class SeTIChatService extends Service implements ChannelService {
 					openIntent.putExtra("message", message);
 					
 					Context context = getApplicationContext();
-					context.sendBroadcast(openIntent);  
+					context.sendBroadcast(openIntent);
+
+					if(!isForeground("es.uc3m.setichat.activity.SeTIChatConversationActivity")){
+						showNotification(openIntent, conv.getidsource());
+					}
+					
 				}
 			}
 		}
 
+		
+		private void showNotification(Intent openIntent, String idsource){
+
+			DatabaseManager dbm = new DatabaseManager(this);
+			Contact cont = dbm.getContact(idsource);
+			dbm.close();
+			NotificationCompat.Builder mBuilder =
+			        new NotificationCompat.Builder(this)
+			        .setSmallIcon(R.drawable.alert_light_frame)
+			        .setContentTitle("SeTIChat")
+			        .setContentText("New Message From " + cont.getName());
+			// Creates an explicit intent for an Activity in your app
+			//Intent resultIntent = new Intent(this, ResultActivity.class);
+
+			// The stack builder object will contain an artificial back stack for the
+			// started Activity.
+			// This ensures that navigating backward from the Activity leads out of
+			// your application to the Home screen.
+			TaskStackBuilder stackBuilder = TaskStackBuilder.create(this);
+			// Adds the back stack for the Intent (but not the Intent itself)
+			stackBuilder.addParentStack(SeTIChatConversationActivity.class);
+			// Adds the Intent that starts the Activity to the top of the stack
+			stackBuilder.addNextIntent(openIntent);
+			PendingIntent resultPendingIntent =
+			        stackBuilder.getPendingIntent(
+			            0,
+			            PendingIntent.FLAG_UPDATE_CURRENT
+			        );
+			mBuilder.setContentIntent(resultPendingIntent);
+			NotificationManager mNotificationManager =
+			    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+			// mId allows you to update the notification later on.
+			mNotificationManager.notify(0, mBuilder.build());
+		}
+		
+		
+		/**
+		 * 
+		 * @param activityPath Path to the activity we want to know is working
+		 * @return true or false if the activity is or is not in the foreground
+		 */
+		public boolean isForeground(String activityPath){
+			ActivityManager manager = (ActivityManager) getSystemService(ACTIVITY_SERVICE);
+			 List< ActivityManager.RunningTaskInfo > runningTaskInfo = manager.getRunningTasks(1); 
+
+			     ComponentName componentInfo = runningTaskInfo.get(0).topActivity;
+			   if(componentInfo.getClassName().equals(activityPath)) return true;
+			return false;
+			}
 
 		@Override
 		public void onClose() {
