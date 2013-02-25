@@ -5,6 +5,7 @@ package es.uc3m.setichat.activity;
 
 
 import android.app.ActionBar;
+import android.app.ActionBar.Tab;
 import android.app.AlertDialog;
 import android.app.FragmentTransaction;
 import android.content.BroadcastReceiver;
@@ -42,6 +43,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private SeTIChatService mService;
 	private static final String STATE_SELECTED_NAVIGATION_ITEM = "selected_navigation_item";
 	
+	private boolean DEBUG = false;
+	
 	// Receivers that wait for notifications from the SeTIChat server
 	private BroadcastReceiver openReceiver;
 	private BroadcastReceiver chatMessageReceiver;
@@ -53,12 +56,10 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
 		SharedPreferences settings = getSharedPreferences(PREFERENCES_FILE, 0);
 		signedUp = settings.getBoolean("registered", false);
 		
 		try{
-	        
 	        // Make sure the service is started.  It will continue running
 	        // until someone calls stopService().  The Intent we use to find
 	        // the service explicitly specifies our service component, because
@@ -66,7 +67,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	        // applications to replace it.
 	        startService(new Intent(MainActivity.this,
 	                SeTIChatService.class));
-	        
         }catch(Exception e){
 
     		Log.d("MainActivity", "Unknown Error", e);
@@ -74,7 +74,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	        stopService(new Intent(MainActivity.this,
 	                SeTIChatService.class));
         }
-		
 		
 		// Create and register broadcast receivers
 		IntentFilter openFilter = new IntentFilter();
@@ -97,15 +96,16 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		  chatMessageReceiver = new BroadcastReceiver() {
 			    @Override
 			    public void onReceive(Context context, Intent intent) {
-			    	Toast toast = Toast.makeText(context, "Message from server", Toast.LENGTH_SHORT);
-					toast.show();
-					// Add phone and message type information to the intent (with addCategory) 
-					intent.setAction("es.uc3m.SeTIChat.CHAT_MESSAGE");
-					System.out.println(intent.getCategories());
-					// Broadcast message
-					context.sendBroadcast(intent); 
-			    }
-			  };
+			    
+			    		Toast toast = Toast.makeText(context, "Message from server", Toast.LENGTH_SHORT);
+						toast.show();
+						// Add phone and message type information to the intent (with addCategory) 
+						intent.setAction("es.uc3m.SeTIChat.CHAT_MESSAGE");
+						System.out.println(intent.getCategories());
+						// Broadcast message
+						context.sendBroadcast(intent); 
+			   }
+		  };
 			  
 		IntentFilter chatMessageFilter = new IntentFilter();
 		chatMessageFilter.addAction("es.uc3m.SeTIChat.CHAT_INTERNALMESSAGE");
@@ -113,13 +113,13 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		registerReceiver(chatMessageReceiver, chatMessageFilter);
 
 		// Check User is signed up
-		
 		// If it is user's first time, show sign up screen
 		if(!signedUp){
 			Intent signUp = new Intent();
 			signUp.setClass(this, SignUpActivity.class);
 			startActivityForResult(signUp, 1);
-		}else{ // Normal execution
+		}else{
+			// Normal execution
 			startMainActivity();
 		}
 	}
@@ -128,8 +128,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private void startMainActivity() {
 		// TODO Auto-generated method stub
 		// Otherwise, show main screen
-		setContentView(R.layout.activity_main);
-
 		// Set up the action bar to show tabs.
 		final ActionBar actionBar = getActionBar();
 		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
@@ -140,7 +138,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 				.setTabListener(this));
 		actionBar.addTab(actionBar.newTab().setText(R.string.title_section2)
 				.setTabListener(this));
-		Log.i("Activty", "onCreate");
+		Log.i("Activity", "onCreate");
+		
+		setContentView(R.layout.activity_main);
 	}
 
 
@@ -168,20 +168,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 
 	@Override
 	protected void onActivityResult(int requestCode, int resultCode, Intent data){
+		super.onActivityResult(requestCode, resultCode, data);
 		if(requestCode==1 && resultCode==RESULT_OK){
-			String mes = data.getStringExtra("message");
-			ChatMessage message = XMLParser.XMLtoMessage(mes);
-			// Saving user preferences
-			signedUp = true;
-			SharedPreferences settings = getSharedPreferences(PREFERENCES_FILE, 0);
-			SharedPreferences.Editor setEditor = settings.edit();
-			setEditor.putBoolean("registered", signedUp);
-			// Persist random number received from server as sourceId
-			String sourceId = message.getIdSource();
-			setEditor.putString("sourceId", sourceId);
-			setEditor.commit();
-			
-			// Call main activity layout and functionality
 			startMainActivity();
 		}else{
 			// Show error message saying something was wrong
@@ -189,7 +177,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			Log.e("SIGNUP", "Error signing up. Restarting process...");
 			// Restart SignUp Activity
 			Intent signUp = new Intent();
-			signUp.setClass(this, SignUpActivity.class);
+			signUp.setClass(getApplicationContext(), SignUpActivity.class);
 			startActivityForResult(signUp, 1);
 		}
 	}
@@ -262,12 +250,11 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	        	Log.i("Service Connection", "Estamos en onServiceConnected");
 	            SeTIChatServiceBinder binder = (SeTIChatServiceBinder) service;
 	            mService = binder.getService();
-	            
 	        }
 
 	        @Override
 	        public void onServiceDisconnected(ComponentName arg0) {
-	           
+	        	
 	        }
 	    };
 

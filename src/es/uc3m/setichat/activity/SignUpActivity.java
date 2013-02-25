@@ -7,6 +7,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.Bundle;
@@ -29,15 +30,18 @@ import es.uc3m.setichat.utils.XMLParser;
  */
 public class SignUpActivity extends Activity {
 	
+	EditText nick, phone;
+	Button button;
+
+	private boolean DEBUG = false;
 	private SeTIChatService mService;
 	private BroadcastReceiver chatMessageReceiver;
 	
-	private boolean DEBUG = false;
 	
-	EditText nick, phone;
-	Button button;
-	private final String SERVER_NAME = "aplicacion@appspot.com";
+	private final String PREFERENCES_FILE = "SeTiChat-Settings";
+	private final String SERVER_NAME = "setichat@appspot.com";
 	
+
 	private ServiceConnection mConnection = new ServiceConnection() {
 
 		public void onServiceConnected(ComponentName className, IBinder service) {
@@ -49,6 +53,9 @@ public class SignUpActivity extends Activity {
 			mService = SeTIChatServiceBinder.getService();
 
 			DEBUG = true;
+
+			render();
+
 		}
 
 		public void onServiceDisconnected(ComponentName className) {
@@ -67,19 +74,73 @@ public class SignUpActivity extends Activity {
 		}
 	};
 	
+	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-
+		
+		 chatMessageReceiver = new BroadcastReceiver() {
+			    @Override
+			    public void onReceive(Context context, Intent intent) {
+			    	ChatMessage mes = XMLParser.XMLtoMessage(intent.getStringExtra("message"));
+					// Check message code
+					if(mes.getResponseCode()==201){
+						SharedPreferences settings = getSharedPreferences(PREFERENCES_FILE, 0);
+						SharedPreferences.Editor setEditor = settings.edit();
+						setEditor.putBoolean("registered", true);
+						// Persist random number received from server as sourceId
+						String sourceId = mes.getResponseMessage();
+						setEditor.putString("sourceId", sourceId);
+						setEditor.commit();
+						Log.i("SIGNUP", "Signed up successfully");
+						
+						// Return control to main activity
+						backToMain(RESULT_OK);
+					}else{
+						backToMain(RESULT_CANCELED);
+					}
+				}
+		};
+		IntentFilter chatMessageFilter = new IntentFilter();
+		chatMessageFilter.addAction("es.uc3m.SeTIChat.SIGN_UP");
+		//chatMessageFilter.addCategory("main");
+		registerReceiver(chatMessageReceiver, chatMessageFilter);
+		
 		if (mService == null) {
 			// Binding the activity to the service to get shared objects
 			if (DEBUG)
-				Log.d("SignUpActivity", "Binding activity");
+				Log.d("SeTIChatConversationActivity", "Binding activity");
 			bindService(new Intent(SignUpActivity.this,
 					SeTIChatService.class), mConnection,
 					Context.BIND_AUTO_CREATE);
+		}else{
+			render();
 		}
 		
+		
+	}
+
+	protected void backToMain(int code) {
+		// TODO Auto-generated method stub
+		setResult(code);
+		finish();
+	}
+
+	@Override
+	public boolean onCreateOptionsMenu(Menu menu) {
+		super.onCreateOptionsMenu(menu);
+		getMenuInflater().inflate(R.menu.activity_sign_up, menu);
+		return true;
+	}
+	
+	@Override
+	public void onStop(){
+		super.onStop();
+		unbindService(mConnection);
+		unregisterReceiver(chatMessageReceiver);
+	}
+	
+	public void render(){
 		setContentView(R.layout.activity_sign_up);
 		
 		nick = (EditText) findViewById(R.id.nick);
@@ -96,75 +157,57 @@ public class SignUpActivity extends Activity {
 					// Show error message
 					Log.e("SIGNUP", "Error in Sign Up. Nick and Phone fields are mandatory");
 				}
-				signUp(nickname,phoneNumber);
+				
+				signUp(nickname, phoneNumber);
 			}	
 		});
-		
-		chatMessageReceiver = new BroadcastReceiver (){
-			@Override
-		    public void onReceive(Context context, Intent intent) {
-				Log.i("SIGNUP", "MESSAGE RECEIVED");
-				// Get message from intent and cast into an object
-				 ChatMessage mes = XMLParser.XMLtoMessage(intent.getStringExtra("message"));
-				
-				// Check message code
-				if(mes.getResponseCode()==201){
-					Log.i("SIGNUP", "Signed up successfully");
-					finishSignUp(intent, RESULT_OK);
-				}else{
-					// Show error message
-					Log.e("SIGNUP", "Error in Sign Up process: "+mes.getResponseCode());
-					finishSignUp(intent, RESULT_CANCELED);
-				}
-				
-				
-		    }
-
-		};
-		
-		IntentFilter filter = new IntentFilter();
-		filter.addAction("es.uc3m.SeTIChat.SIGN_UP");
-		
-		registerReceiver(chatMessageReceiver, filter);
-	}
-
-	protected void finishSignUp(Intent mes, int code) {
-		// TODO Auto-generated method stub
-		setResult(code, mes);
-		finish();
-		
-	}
-
-	@Override
-	public boolean onCreateOptionsMenu(Menu menu) {
-		super.onCreateOptionsMenu(menu);
-		getMenuInflater().inflate(R.menu.activity_sign_up, menu);
-		return true;
 	}
 	
-	@Override
-	public void onStop(){
-		super.onStop();
-		unregisterReceiver(chatMessageReceiver);
-		unbindService(mConnection);
-	}
-	
-	
-	public void signUp(String nick, String phone){
-		// Create message for server
-		ChatMessage mes = new ChatMessage();
-		// Header
-		mes.setIdSource(phone);
-		mes.setIdDestination(SERVER_NAME);
-		mes.setType(1);
-		mes.setEncrypted(false);
-		mes.setSigned(false);
-		// Data
-		mes.setNick(nick);
-		mes.setMobile(phone);
+	private void signUp(String nick, String phone){
+		// Check typed phone with real one (key used in service due to server restrictions)
+		SharedPreferences settings = getSharedPreferences(PREFERENCES_FILE, 0);
+		String realPhone = settings.getString("serviceKey", null);
+		if(realPhone==null){
+			// Error
+			Log.e("SIGNUP", "Error retrieving service key");
+		}
 		
-		String m = mes.toString();
-		// Send message to server
-		mService.sendMessage(m);
+		if(!phone.equalsIgnoreCase(realPhone)){
+			Log.i("SIGNUP", "Wrong phone number");
+			Toast.makeText(getApplicationContext(), "Wrong phone number, check you type your real phone number.", Toast.LENGTH_SHORT).show();
+			// Restart SignUp Activity
+			Intent signUp = new Intent();
+			signUp.setClass(getApplicationContext(), SignUpActivity.class);
+			startActivityForResult(signUp, 1);
+		}else{
+			// Save typed phone to start the service
+			SharedPreferences.Editor setEditor = settings.edit();
+			setEditor.putString("nick", nick);
+			setEditor.putString("serviceKey", phone);
+			setEditor.commit();
+			
+			
+			// Create message for server
+			ChatMessage mes = new ChatMessage();
+			// Header
+			mes.setIdSource(phone);
+			mes.setIdDestination(SERVER_NAME);
+			mes.setType(1);
+			mes.setEncrypted(false);
+			mes.setSigned(false);
+			// Data
+			mes.setNick(nick);
+			mes.setMobile(phone);
+			
+			// RANDOM TODO
+			mes.setIdMessage("2d46f3c49a2c6b7a2");
+			
+			String m = mes.toString();
+			// Send message to server*/
+			mService.sendMessage(m);
+			
+			Log.i("SIGNUP", "Sign up message sent: "+m);
+		}
 	}
+	
 }

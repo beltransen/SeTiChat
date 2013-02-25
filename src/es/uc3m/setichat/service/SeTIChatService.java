@@ -37,12 +37,12 @@ public class SeTIChatService extends Service implements ChannelService {
 	// Needed variables
 	private boolean signedUp;
 	private final String PREFERENCES_FILE = "SeTiChat-Settings";
+	private final String phoneNumber = "100276600.100277382";
 
 	
 	public SeTIChatService() {
 		Log.i("SeTIChat Service", "Service constructor");
 	}
-
 	
 	
 	  @Override
@@ -53,11 +53,16 @@ public class SeTIChatService extends Service implements ChannelService {
 	    // Read if registered from Preferences file
 	    SharedPreferences settings = this.getSharedPreferences(	PREFERENCES_FILE, 0);
 		signedUp = settings.getBoolean("registered", false);
+		if(!signedUp){ // Persist phone number into settings to be used in signup process in main activity
+			SharedPreferences.Editor setEditor = settings.edit();
+			setEditor.putString("serviceKey", phoneNumber);
+			setEditor.commit();
+		}
 	    
 	    // SeTIChat connection is seted up in this step. 
 	    // Mobile phone should be changed with the appropiate value
 	    channel = new ChannelAPI();
-		this.connect("620136822");  
+		this.connect(phoneNumber);  
 	    binder.onCreate(this);
 //	    XMLParser.XMLtoMessage("<?xml version='1.0' encoding='UTF-8'?>"
 //	    		+ "<message>"
@@ -193,12 +198,13 @@ public class SeTIChatService extends Service implements ChannelService {
 			ChatMessage m = XMLParser.XMLtoMessage(message);
 			
 			// TODO Auto-generated method stub
-			String intentKey;
+			String intentKey = "";
 			if(!signedUp){
 				intentKey = "es.uc3m.SeTIChat.SIGN_UP";
 			}else{
 				intentKey = "es.uc3m.SeTIChat.CHAT_INTERNALMESSAGE";
 			}
+			
 			
 			Intent openIntent = new Intent(intentKey);
 			openIntent.setPackage("es.uc3m.setichat");
