@@ -199,9 +199,6 @@ public class SignUpActivity extends Activity {
 			mes.setNick(nick);
 			mes.setMobile(phone);
 			
-			// RANDOM TODO
-			mes.setIdMessage("2d46f3c49a2c6b7a2");
-			
 			String m = mes.toString();
 			// Send message to server*/
 			mService.sendMessage(m);
