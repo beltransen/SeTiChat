@@ -268,7 +268,6 @@ public class SeTIChatConversationActivity extends Activity {
 				objmessage.setEncrypted(false);
 				objmessage.setSigned(false);
 				objmessage.setChatMessage(message);
-				objmessage.setIdMessage("2d46f3c49a2c6b7a2");
 				objmessage.setIdDestination(idDestination);				
 				SharedPreferences settings = getSharedPreferences("SeTiChat-Settings", 0);				
 				objmessage.setIdSource(settings.getString("sourceId", null));
@@ -285,7 +284,7 @@ public class SeTIChatConversationActivity extends Activity {
 				
 				mService.sendMessage(objmessage.toString());
 				// Refresh textview
-				text.append(edit.getText().toString() + " at " + time );
+				text.append("\n"+edit.getText().toString() + " at " + time );
 				edit.setText("");
 				
 			}

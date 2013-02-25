@@ -211,23 +211,24 @@ public class SeTIChatService extends Service implements ChannelService {
 					DatabaseManager dbm = new DatabaseManager(getApplicationContext());
 					for(int i = 0; i<contacts.size(); i++){
 						String [] c = contacts.get(i);
-						Contact contact = new Contact(dbm.getContactsCount(), c[1], c[0]);
-						dbm.addContact(contact);
+						if(dbm.getContact(c[1])==null){
+							Contact contact = new Contact(dbm.getContactsCount(), c[1], c[0]);
+							dbm.addContact(contact);
+						}
+						
 					}
+					dbm.close();
 				}else{
 					intentKey = "es.uc3m.SeTIChat.CHAT_INTERNALMESSAGE";
+					Intent openIntent = new Intent(intentKey);
+					openIntent.setPackage("es.uc3m.setichat");
+					// Add message to intent
+					openIntent.putExtra("message", message);
+					
+					Context context = getApplicationContext();
+					context.sendBroadcast(openIntent);  
 				}
 			}
-			
-			
-			Intent openIntent = new Intent(intentKey);
-			openIntent.setPackage("es.uc3m.setichat");
-			// Add message to intent
-			openIntent.putExtra("message", message);
-			
-			Context context = getApplicationContext();
-			context.sendBroadcast(openIntent);  
-			
 		}
 
 

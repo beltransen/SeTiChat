@@ -239,6 +239,8 @@ public class DatabaseManager extends SQLiteOpenHelper{
 	        	result.setIdDestination(cursor.getString(1));
 	        	result.setName(cursor.getString(2));
 	        	//cursor.getString(0);
+	        }else{
+	        	result = null;
 	        }
 	        cursor.close();
 	 

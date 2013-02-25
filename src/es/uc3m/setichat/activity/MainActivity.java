@@ -182,9 +182,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	@Override
 	protected void onStop() {
 		super.onStop();
-		unbindService(mConnection);
-		unregisterReceiver(chatMessageReceiver);
-		unregisterReceiver(openReceiver);
 	}
 
 	@Override
@@ -324,10 +321,12 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	 */
 	public ArrayList<String[]> getContacts() {
 		Cursor cur = cr.query(ContactsContract.Contacts.CONTENT_URI, null, null, null, null);
-		String [] result = new String[2];
+		
 		ArrayList<String []> resultlist = new ArrayList<String[]>();
-		if (cur.getCount() > 0) {
+		int num  =cur.getCount();
+		if (num > 0) {
 		    while (cur.moveToNext()) {
+		    	String [] result = new String[2];
 		    // read id
 		        String id = cur.getString(cur.getColumnIndex(ContactsContract.Contacts._ID));
 		        /** Read name **/
@@ -340,9 +339,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			        result [1] = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.NUMBER));		        
 			        //String typeStr = pCur.getString(pCur.getColumnIndex(ContactsContract.CommonDataKinds.Phone.TYPE));
 			        
-			        pCur.close();
 			        resultlist.add(result);
 		        }
+		        pCur.close();
 		        
 		        
 		    }
