@@ -5,7 +5,7 @@ public class ChatMessage {
 	// Constructor
 	public ChatMessage(){}
 	
-	public ChatMessage(String idSource, String idDestination, byte[] idMessage,
+	public ChatMessage(String idSource, String idDestination, String idMessage,
 			boolean encrypted, boolean signed, byte type, String nick,
 			String mobile, String[] mobileList, String[][] contactList,
 			String chatMessage, byte responseCode, String responseMessage,
@@ -34,7 +34,7 @@ public class ChatMessage {
 	// Header fields (Mandatory)
 	private String idSource;
 	private String idDestination;
-	private byte[] idMessage;
+	private String idMessage;
 	private boolean encrypted;
 	private boolean signed;
 	private int type;
@@ -96,11 +96,11 @@ public class ChatMessage {
 		this.idDestination = idDestination;
 	}
 
-	public byte[] getIdMessage() {
+	public String getIdMessage() {
 		return idMessage;
 	}
 
-	public void setIdMessage(byte[] idMessage) {
+	public void setIdMessage(String idMessage) {
 		this.idMessage = idMessage;
 	}
 
