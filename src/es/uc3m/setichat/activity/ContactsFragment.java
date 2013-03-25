@@ -43,6 +43,7 @@ public class ContactsFragment extends ListFragment {
 	public void onAttach(Activity activity) {
 		// TODO Auto-generated method stub
 		super.onAttach(activity);
+		Log.i("CONTACTS", "ATTACHED");
 		mService = ((MainActivity) activity).getService();
 	}
 
@@ -57,6 +58,7 @@ public class ContactsFragment extends ListFragment {
 		super.onCreate(savedInstanceState);
 		// Populate list with contacts.
 		// Ey, a more fancy layout could be used! You dare?!
+		Log.i("CONTACTS", "CREATED");
 		refreshContactList();
 		
 	}
@@ -69,7 +71,6 @@ public class ContactsFragment extends ListFragment {
 		intent.setClass(getActivity(), SeTIChatConversationActivity.class);
 		// Meter la informacion del número de teléfono en el intent para luego
 		// reconocer los mensajes
-		String mobile = l.getAdapter().getItem(position).toString();
 		Log.i("Click on conversation", "Conversation: " + position + " opened");
 		intent.putExtra("position", position);
 
@@ -77,8 +78,9 @@ public class ContactsFragment extends ListFragment {
 	}
 	
 	public void refreshContactList(){
+		Log.i("CONTACTS", "refreshing");
 		DatabaseManager dbm = new DatabaseManager(getActivity());		
-		int id = dbm.getContactsCount();
+		
 		List<Contact> list = dbm.getAllContacts();
 		dbm.close();
 		

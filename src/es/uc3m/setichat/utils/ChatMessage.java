@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import org.apache.commons.lang.RandomStringUtils;
 
 import android.content.Context;
+import es.uc3m.setichat.utils.datamodel.Contact;
 
 public class ChatMessage {
 	
@@ -23,7 +24,7 @@ public class ChatMessage {
 			String mobile, String[] mobileList, ArrayList<String[]> contactList,
 			String chatMessage, byte responseCode, String responseMessage,
 			String revokedMobile, boolean publicKey, String key,
-			byte[] signature) {
+			byte[] signature, Context context) {
 		super();
 		this.idSource = idSource;
 		this.idDestination = idDestination;
@@ -42,6 +43,13 @@ public class ChatMessage {
 		this.publicKey = publicKey;
 		this.key = key;
 		this.signature = signature;
+		
+		this.context = context;
+	}
+
+	public ChatMessage(Context context) {
+		// TODO Auto-generated constructor stub
+		this.context = context;
 	}
 
 	private Context context;
@@ -279,7 +287,8 @@ public class ChatMessage {
 			break;
 		case 4: // Chat Message
 			DatabaseManager dbm = new DatabaseManager(getContext());
-			SecurityModule sm = new SecurityModule(dbm.getContact(this.idDestination));
+			Contact c = dbm.getContact(this.idDestination);
+			SecurityModule sm = new SecurityModule(c);
 			String mes = (String) ((this.encrypted) ? Base64.encodeToString(sm.encrypt(this.chatMessage), false): this.chatMessage);
 			contentBlock += "<chatMessage>"+mes+"</chatMessage>";
 			break;

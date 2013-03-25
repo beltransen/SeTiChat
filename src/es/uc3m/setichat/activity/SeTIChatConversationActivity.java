@@ -266,7 +266,7 @@ public class SeTIChatConversationActivity extends Activity {
 				// Convert message to XML format
 				//ChatMessage(idSource, idDestination, idMessage, encrypted, signed, type, nick, mobile, mobileList, contactList, chatMessage, responseCode, responseMessage, revokedMobile, publicKey, key, signature)
 				String message = edit.getText().toString();
-				ChatMessage objmessage = new ChatMessage();
+				ChatMessage objmessage = new ChatMessage(getApplicationContext());
 				objmessage.setType(4);
 				
 				if(settings.getBoolean("encryption", false)){

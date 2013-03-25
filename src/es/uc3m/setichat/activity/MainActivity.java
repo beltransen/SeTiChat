@@ -58,14 +58,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		SharedPreferences settings = getSharedPreferences(PREFERENCES_FILE, 0);
-		/* Cuando reiniciamos
-		SharedPreferences.Editor ed = settings.edit();
-		ed.putString("serviceKey", "0101");
-		ed.putString("nick", "popeye");
-		ed.putString("sourceId", "AHRlWrrBMnsMdyHkbuHuLO245eS4fd08lXO0CaAGS6L740ZddL5qIrFTucjRErvEyvKF8G6bzI-Ia1UGky1HeKZinf1wpM2BHxYpGxNylwsUyCZwfZHvVpE");
-		ed.putBoolean("registered", true);
-		ed.commit();
-		//*/
 		signedUp = settings.getBoolean("registered", false);
 		
 		

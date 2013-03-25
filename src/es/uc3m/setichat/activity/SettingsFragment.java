@@ -66,12 +66,12 @@ public class SettingsFragment extends Fragment {
 		View myFragmentView = inflater.inflate(R.layout.activity_settings, container, false);
 		
 		// Switchers
-		encrypt = (Switch) getView().findViewById(R.id.encryptMessages);
-		sign = (Switch) getView().findViewById(R.id.signMessages);
+		encrypt = (Switch) myFragmentView.findViewById(R.id.encryptMessages);
+		sign = (Switch) myFragmentView.findViewById(R.id.signMessages);
 		
 		// TextViews
-		t_publicKey = (TextView) getView().findViewById(R.id.t_publickey);
-		t_privateKey = (TextView) getView().findViewById(R.id.t_privatekey);
+		t_publicKey = (TextView) myFragmentView.findViewById(R.id.t_publickey);
+		t_privateKey = (TextView) myFragmentView.findViewById(R.id.t_privatekey);
 		
 		// Show actual settings
 		boolean [] savedSettings = getSettings();
@@ -84,8 +84,8 @@ public class SettingsFragment extends Fragment {
 		t_privateKey.setText(currentKeys[1]);
 		
 		// Create listeners for the buttons
-		Button newKeys = (Button) getView().findViewById(R.id.getkey);
-		Button saveButton = (Button) getView().findViewById(R.id.save_button);
+		Button newKeys = (Button) myFragmentView.findViewById(R.id.getkey);
+		Button saveButton = (Button) myFragmentView.findViewById(R.id.save_button);
 		
 		newKeys.setOnClickListener(new View.OnClickListener(){
 

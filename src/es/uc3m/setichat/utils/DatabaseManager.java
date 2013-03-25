@@ -205,7 +205,7 @@ public class DatabaseManager extends SQLiteOpenHelper{
 	        return count;
 	    }
 	    
-		 // Getting convesation Count
+		 // Get contact info based on contact id
 	    public Contact getContact(int id) {
 	        String countQuery = "SELECT  * FROM " + TABLE_CONTACTS + " WHERE " + CONTACT_ID
 	        		+ " = " + id;
@@ -218,7 +218,7 @@ public class DatabaseManager extends SQLiteOpenHelper{
 	        	result.setId(cursor.getInt(0));
 	        	result.setIdDestination(cursor.getString(1));
 	        	result.setName(cursor.getString(2));
-	        	result.setPublicKey(cursor.getBlob(3));
+	        	//result.setPublicKey(cursor.getBlob(3));
 	        	//cursor.getString(0);
 	        }
 	        cursor.close();
@@ -227,7 +227,7 @@ public class DatabaseManager extends SQLiteOpenHelper{
 	        return result;
 	    }
 	    
-		 // Getting convesation Count
+		 // Get contact info based on idsource
 	    public Contact getContact(String idsource) {
 	        String countQuery = "SELECT  * FROM " + TABLE_CONTACTS + " WHERE " + CONTACT_IDDESTINATION
 	        		+ " ='" + idsource + "'";
