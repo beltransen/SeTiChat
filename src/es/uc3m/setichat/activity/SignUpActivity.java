@@ -78,51 +78,12 @@ public class SignUpActivity extends Activity {
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
-		
-		 chatMessageReceiver = new BroadcastReceiver() {
-			    @Override
-			    public void onReceive(Context context, Intent intent) {
-			    	ChatMessage mes = XMLParser.XMLtoMessage(intent.getStringExtra("message"));
-					// Check message code
-					if(mes.getResponseCode()==201){
-						SharedPreferences settings = getSharedPreferences(PREFERENCES_FILE, 0);
-						SharedPreferences.Editor setEditor = settings.edit();
-						setEditor.putBoolean("registered", true);
-						// Persist random number received from server as sourceId
-						String sourceId = mes.getResponseMessage();
-						setEditor.putString("sourceId", sourceId);
-						setEditor.commit();
-						Log.i("SIGNUP", "Signed up successfully");
-						
-						// Return control to main activity
-						backToMain(RESULT_OK);
-					}else{
-						backToMain(RESULT_CANCELED);
-					}
-				}
-		};
-		IntentFilter chatMessageFilter = new IntentFilter();
-		chatMessageFilter.addAction("es.uc3m.SeTIChat.SIGN_UP");
-		//chatMessageFilter.addCategory("main");
-		registerReceiver(chatMessageReceiver, chatMessageFilter);
-		
-		if (mService == null) {
-			// Binding the activity to the service to get shared objects
-			if (DEBUG)
-				Log.d("SeTIChatConversationActivity", "Binding activity");
-			bindService(new Intent(SignUpActivity.this,
-					SeTIChatService.class), mConnection,
-					Context.BIND_AUTO_CREATE);
-		}else{
-			render();
-		}
-		
-		
+		render();
 	}
-
-	protected void backToMain(int code) {
+	
+	protected void backToMain(int code, Intent data) {
 		// TODO Auto-generated method stub
-		setResult(code);
+		setResult(code, data);
 		finish();
 	}
 
@@ -136,8 +97,6 @@ public class SignUpActivity extends Activity {
 	@Override
 	public void onStop(){
 		super.onStop();
-		unbindService(mConnection);
-		unregisterReceiver(chatMessageReceiver);
 	}
 	
 	public void render(){
@@ -156,55 +115,14 @@ public class SignUpActivity extends Activity {
 				if(nickname.equalsIgnoreCase("") || phoneNumber.equalsIgnoreCase("")){
 					// Show error message
 					Log.e("SIGNUP", "Error in Sign Up. Nick and Phone fields are mandatory");
+					Toast.makeText(getApplicationContext(), "Fill both nick and pass to register", Toast.LENGTH_SHORT).show();
+					backToMain(RESULT_CANCELED, null);
 				}
-				
-				signUp(nickname, phoneNumber);
+				Intent data = new Intent();
+				data.putExtra("nickname", nickname);
+				data.putExtra("phone", phoneNumber);
+				backToMain(RESULT_OK, data);
 			}	
 		});
 	}
-	
-	private void signUp(String nick, String phone){
-		// Check typed phone with real one (key used in service due to server restrictions)
-		SharedPreferences settings = getSharedPreferences(PREFERENCES_FILE, 0);
-		String realPhone = settings.getString("serviceKey", null);
-		if(realPhone==null){
-			// Error
-			Log.e("SIGNUP", "Error retrieving service key");
-		}
-		
-		if(!phone.equalsIgnoreCase(realPhone)){
-			Log.i("SIGNUP", "Wrong phone number");
-			Toast.makeText(getApplicationContext(), "Wrong phone number, check you type your real phone number.", Toast.LENGTH_SHORT).show();
-			// Restart SignUp Activity
-			Intent signUp = new Intent();
-			signUp.setClass(getApplicationContext(), SignUpActivity.class);
-			startActivityForResult(signUp, 1);
-		}else{
-			// Save typed phone to start the service
-			SharedPreferences.Editor setEditor = settings.edit();
-			setEditor.putString("nick", nick);
-			setEditor.putString("serviceKey", phone);
-			setEditor.commit();
-			
-			
-			// Create message for server
-			ChatMessage mes = new ChatMessage();
-			// Header
-			mes.setIdSource(phone);
-			mes.setIdDestination(SERVER_NAME);
-			mes.setType(1);
-			mes.setEncrypted(false);
-			mes.setSigned(false);
-			// Data
-			mes.setNick(nick);
-			mes.setMobile(phone);
-			
-			String m = mes.toString();
-			// Send message to server*/
-			mService.sendMessage(m);
-			
-			Log.i("SIGNUP", "Sign up message sent: "+m);
-		}
-	}
-	
 }

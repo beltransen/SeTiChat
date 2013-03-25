@@ -50,7 +50,6 @@ public class SeTIChatService extends Service implements ChannelService {
 	// Needed variables
 	private boolean signedUp;
 	private final String PREFERENCES_FILE = "SeTiChat-Settings";
-	private final String phoneNumber = "100276600.100277700";
 
 	
 	public SeTIChatService() {
@@ -61,40 +60,21 @@ public class SeTIChatService extends Service implements ChannelService {
 	  @Override
 	  public void onCreate() {
 	    super.onCreate();
+	    
 	    Log.i("SeTIChat Service", "Service created");
 	    
 	    // Read if registered from Preferences file
 	    SharedPreferences settings = this.getSharedPreferences(	PREFERENCES_FILE, 0);
-		signedUp = settings.getBoolean("registered", false);
-		if(!signedUp){ // Persist phone number into settings to be used in signup process in main activity
-			SharedPreferences.Editor setEditor = settings.edit();
-			setEditor.putString("serviceKey", phoneNumber);
-			setEditor.commit();
-		}
-	    
+	    String phoneNumber = settings.getString("serviceKey", "");
+	    if(phoneNumber.equalsIgnoreCase("")){
+	    	Log.e("SERVICE", "Error starting service. Wrong key");
+	    }
 	    // SeTIChat connection is seted up in this step. 
 	    // Mobile phone should be changed with the appropiate value
 	    channel = new ChannelAPI();
 		this.connect(phoneNumber);  
 	    binder.onCreate(this);
-//	    XMLParser.XMLtoMessage("<?xml version='1.0' encoding='UTF-8'?>"
-//	    		+ "<message>"
-//	    		+ "<header>" 
-//	    		+ "<idSource>FEAD…FAA3</idSource>" 
-//	    		+ "<idDestination>100012345.100056789</idDestination>" 
-//	    		+ "<idMessage>2d46f3c49a2c6b7a2</idMessage>" 
-//	    		+ "<type>4</type>" 
-//	    		+ "<encrypted>false</encrypted>" 
-//	    		+ "<signed>false</signed>" 
-//	    		+ "</header>" 
-//	    		+ "<content>" 
-//	    		+ "<chatMessage>" 
-//	    		+ "Hi there!!!"
-//	    		+ "</chatMessage>" 
-//	    		+ "</content>" 
-//	    		+ "</message>");
 	    
-		 
 	  }
 
 	  @Override
@@ -128,8 +108,9 @@ public class SeTIChatService extends Service implements ChannelService {
 				 protected String doInBackground(String... keys) {
 					 Log.i("Service connect", "Connect test");
 					 String key = keys[0];
+					 Log.i("TOKEN", key);
 					 try {
-							channel = new ChannelAPI("http://setichat.appspot.com", key, current); //Production Example
+							channel = new ChannelAPI("https://setichat.appspot.com", key, current); //Production Example /*tester847*/
 							channel.open();
 							
 						} catch (Exception e){
@@ -156,7 +137,7 @@ public class SeTIChatService extends Service implements ChannelService {
 			 
 			 class SendMessage extends AsyncTask<String, String, String> {
 				 protected String doInBackground(String... messages) {
-					 Log.i("SendMessage", "send message test");
+					 Log.i("SendMessage", "Send: "+messages[0]);
 					 String message = messages[0];
 					 try {
 							channel.send(message, "/chat");
@@ -209,49 +190,42 @@ public class SeTIChatService extends Service implements ChannelService {
 			Log.i("onMessage", "Message received :"+message);
 			// Extract message type (server or user) to decide handler
 			ChatMessage m = XMLParser.XMLtoMessage(message);
-
-		    SharedPreferences settings = this.getSharedPreferences(	PREFERENCES_FILE, 0);
-			signedUp = settings.getBoolean("registered", false);
-			// TODO Auto-generated method stub
-			String intentKey = "";
-			if(!signedUp){
-				intentKey = "es.uc3m.SeTIChat.SIGN_UP";
-			}else{
-				if(m.getType()==3){ //Contact response
-					ArrayList<String[]> contacts = m.getContactList();
-					DatabaseManager dbm = new DatabaseManager(getApplicationContext());
-					for(int i = 0; i<contacts.size(); i++){
-						String [] c = contacts.get(i);
-						if(dbm.getContact(c[1])==null){
-							Contact contact = new Contact(dbm.getContactsCount(), c[1], c[0]);
-							dbm.addContact(contact);
-						}
-						
+			
+			// Broadcast to Main Activity
+			String intentKey = "es.uc3m.SeTIChat.CHAT_INTERNALMESSAGE";
+			Intent openIntent = new Intent(intentKey);
+			openIntent.setPackage("es.uc3m.setichat");
+			// Add message to intent
+			openIntent.putExtra("message", message);
+			
+			if(m.getType()==3){ //Contact response
+				ArrayList<String[]> contacts = m.getContactList();
+				DatabaseManager dbm = new DatabaseManager(getApplicationContext());
+				for(int i = 0; i<contacts.size(); i++){
+					String [] c = contacts.get(i);
+					if(dbm.getContact(c[1])==null){
+						Contact contact = new Contact(dbm.getContactsCount(), c[1], c[0]);
+						dbm.addContact(contact);
 					}
-					dbm.close();
-				}else{
 					
+				}
+				dbm.close();
+			}else{
+				if(m.getType()==4){ // If it is a chat message
 					DatabaseManager dbm = new DatabaseManager(this);					
 					Conversation conv = new Conversation(dbm.getConversationsCount(), "", Calendar.getInstance().getTime().toString(), m.getIdSource());
 					dbm.addConversation(conv);
 					dbm.close();
 					
-					
-					intentKey = "es.uc3m.SeTIChat.CHAT_INTERNALMESSAGE";
-					Intent openIntent = new Intent(intentKey);
-					openIntent.setPackage("es.uc3m.setichat");
-					// Add message to intent
-					openIntent.putExtra("message", message);
-					
-					Context context = getApplicationContext();
-					context.sendBroadcast(openIntent);
-
 					if(!isForeground("es.uc3m.setichat.activity.SeTIChatConversationActivity")){
 						showNotification(openIntent, conv.getidsource());
 					}
-					
 				}
 			}
+			
+			Context context = getApplicationContext();
+			context.sendBroadcast(openIntent);
+			
 		}
 
 		

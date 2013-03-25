@@ -5,6 +5,7 @@ public class Contact {
 	private int id;
 	private String idDestination;
 	private String name;
+	private byte[] publicKey;
 		
 	
 	public Contact(int id, String idDestination, String name) {
@@ -35,6 +36,15 @@ public class Contact {
 	}
 	public void setName(String name) {
 		this.name = name;
+	}
+
+	public byte[] getPublicKey(){
+		return this.publicKey;
+	}
+	
+	public void setPublicKey(byte[] blob) {
+		this.publicKey = blob;
+		
 	}
 	
 	

@@ -2,10 +2,18 @@
 <resources>
 
     <string name="app_name">SeTIChat</string>
-    <string name="title_section3">Section 3</string>
-    <string name="title_section2">Section 2</string>
-    <string name="title_section1">Section 1</string>
+    <string name="title_section3">Settings</string>
+    <string name="title_section2">Recent</string>
+    <string name="title_section1">Contacts</string>
     <string name="hello_world">Hello world!</string>
     <string name="menu_settings">Settings</string>
+    <string name="encryption">Encryption</string>
+    <string name="sign_messages">Sign messages</string>
+    <string name="action_save">Save</string>
+    <string name="newkey">Get new keys</string>
+    <string name="change_user">Change user</string>
+    <string name="private_key">"Private: "</string>
+    <string name="current_keys">Current pair of keys</string>
+    <string name="public_key">&quot;Public: &quot;</string>
 
 </resources>

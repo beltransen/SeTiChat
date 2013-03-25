@@ -52,6 +52,8 @@ public class SeTIChatConversationActivity extends Activity {
 	private TextView text;
 
 	private boolean DEBUG = false;
+	private final String PREFERENCES_FILE = "SeTiChat-Settings";
+	private final String SERVER_NAME = "setichat@appspot.com";
 
 	private SeTIChatService mService;
 	private BroadcastReceiver chatMessageReceiver;
@@ -254,22 +256,33 @@ public class SeTIChatConversationActivity extends Activity {
 
 			@Override
 			public void onClick(View v) {
-
 				if (DEBUG)
 					Log.d("SeTIChatConversationActivity",
 							"conversationView:OnClickListener: User clicked on sent button");
 
+				SharedPreferences settings = getSharedPreferences(PREFERENCES_FILE, 0);
+				
 				Time time = new Time(System.currentTimeMillis());
 				// Convert message to XML format
 				//ChatMessage(idSource, idDestination, idMessage, encrypted, signed, type, nick, mobile, mobileList, contactList, chatMessage, responseCode, responseMessage, revokedMobile, publicKey, key, signature)
 				String message = edit.getText().toString();
 				ChatMessage objmessage = new ChatMessage();
 				objmessage.setType(4);
-				objmessage.setEncrypted(false);
-				objmessage.setSigned(false);
+				
+				if(settings.getBoolean("encryption", false)){
+					objmessage.setEncrypted(true);
+				}else{
+					objmessage.setEncrypted(false);
+				}
+				
+				if(settings.getBoolean("signature", false)){
+					objmessage.setSigned(true);				
+				}else{
+					objmessage.setSigned(false);				
+				}
+				
 				objmessage.setChatMessage(message);
-				objmessage.setIdDestination(idDestination);				
-				SharedPreferences settings = getSharedPreferences("SeTiChat-Settings", 0);				
+				objmessage.setIdDestination(idDestination);							
 				objmessage.setIdSource(settings.getString("sourceId", null));
 				
 				DatabaseManager dbm = new DatabaseManager(getApplicationContext());

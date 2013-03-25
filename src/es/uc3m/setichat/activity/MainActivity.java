@@ -1,13 +1,9 @@
 package es.uc3m.setichat.activity;
 
-
-
-
-
 import java.util.ArrayList;
 
 import android.app.ActionBar;
-import android.app.ActionBar.Tab;
+import android.app.ActionBar.TabListener;
 import android.app.AlertDialog;
 import android.app.FragmentTransaction;
 import android.content.BroadcastReceiver;
@@ -56,12 +52,20 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private boolean signedUp;
 	private final String PREFERENCES_FILE = "SeTiChat-Settings";
 	private final String SERVER_NAME = "setichat@appspot.com";
-	private static ContentResolver cr;
+	private static ContentResolver cr;	
 	
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
 		super.onCreate(savedInstanceState);
 		SharedPreferences settings = getSharedPreferences(PREFERENCES_FILE, 0);
+		/* Cuando reiniciamos
+		SharedPreferences.Editor ed = settings.edit();
+		ed.putString("serviceKey", "0101");
+		ed.putString("nick", "popeye");
+		ed.putString("sourceId", "AHRlWrrBMnsMdyHkbuHuLO245eS4fd08lXO0CaAGS6L740ZddL5qIrFTucjRErvEyvKF8G6bzI-Ia1UGky1HeKZinf1wpM2BHxYpGxNylwsUyCZwfZHvVpE");
+		ed.putBoolean("registered", true);
+		ed.commit();
+		//*/
 		signedUp = settings.getBoolean("registered", false);
 		
 		
@@ -86,14 +90,35 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		  chatMessageReceiver = new BroadcastReceiver() {
 			    @Override
 			    public void onReceive(Context context, Intent intent) {
+			    	// Check which type of message has arrive
 		    		Toast toast = Toast.makeText(context, "Message from server", Toast.LENGTH_SHORT);
 					toast.show();
-					// Add phone and message type information to the intent (with addCategory) 
-					intent.setAction("es.uc3m.SeTIChat.CHAT_MESSAGE");
-					System.out.println(intent.getCategories());
-					// Broadcast message
-					context.sendBroadcast(intent); 
-			   }
+					ChatMessage mes = XMLParser.XMLtoMessage(intent.getStringExtra("message"));
+					SharedPreferences settings = getSharedPreferences(PREFERENCES_FILE, 0);
+					signedUp = settings.getBoolean("registered", false);
+					if(!signedUp){
+						if(mes.getResponseCode()==201){
+							SharedPreferences.Editor setEditor = settings.edit();
+							setEditor.putBoolean("registered", true);
+							// Persist random number received from server as sourceId
+							String sourceId = mes.getResponseMessage();
+							setEditor.putString("sourceId", sourceId);
+							setEditor.commit();
+							Log.i("SIGNUP", "Signed up successfully");
+						}else{
+							Log.e("SIGNUP", "Response message shows errors...");
+						}
+						startMainActivity();
+					}else if(mes.getResponseCode()==3){ // ContactResponse
+						((ContactsFragment) getFragmentManager().findFragmentById(0)).refreshContactList();
+					}else{
+						// Add idDestination type to the intent 
+						intent.setAction("es.uc3m.SeTIChat.CHAT_MESSAGE");
+						System.out.println(intent.getCategories());
+						// Broadcast message
+						context.sendBroadcast(intent); 
+					}
+				}
 		  };
 			  
 		IntentFilter chatMessageFilter = new IntentFilter();
@@ -103,28 +128,32 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		registerReceiver(chatMessageReceiver, chatMessageFilter);
 		cr = getContentResolver();
 		
+		if(signedUp){
+			try{
+		        // Make sure the service is started.  It will continue running
+		        // until someone calls stopService().  The Intent we use to find
+		        // the service explicitly specifies our service component, because
+		        // we want it running in our own process and don't want other
+		        // applications to replace it.
+		        startService(new Intent(MainActivity.this,
+		                SeTIChatService.class));
+		        bindService(new Intent(MainActivity.this,
+						SeTIChatService.class), mConnection,
+						Context.BIND_AUTO_CREATE);
+	        }catch(Exception e){
+	    		Log.d("MainActivity", "Unknown Error", e);
 
-		try{
-	        // Make sure the service is started.  It will continue running
-	        // until someone calls stopService().  The Intent we use to find
-	        // the service explicitly specifies our service component, because
-	        // we want it running in our own process and don't want other
-	        // applications to replace it.
-	        startService(new Intent(MainActivity.this,
-	                SeTIChatService.class));
-	        bindService(new Intent(MainActivity.this,
-					SeTIChatService.class), mConnection,
-					Context.BIND_AUTO_CREATE);
-        }catch(Exception e){
-
-    		Log.d("MainActivity", "Unknown Error", e);
-
-	        stopService(new Intent(MainActivity.this,
-	                SeTIChatService.class));
-        }
+		        stopService(new Intent(MainActivity.this,
+		                SeTIChatService.class));
+	        }
+		}else{ // Show sign up screen
+			Intent signUp = new Intent();
+			signUp.setClass(getApplicationContext(), SignUpActivity.class);
+			startActivityForResult(signUp, 1);
+		}
+		
 		
 	}
-	
 	
 	private void startMainActivity() {
 		// Check for new contacts
@@ -150,33 +179,36 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		// Send contact request
 		mService.sendMessage(message);
 		
-		// Set up the action bar to show tabs.
 		final ActionBar actionBar = getActionBar();
 		actionBar.setNavigationMode(ActionBar.NAVIGATION_MODE_TABS);
+		// Set up the action bar to show tabs.
 		// For each of the sections in the app, add a tab to the action bar.
-		actionBar.addTab(actionBar.newTab().setText(R.string.title_section1)
-				.setTabListener(this));
-		actionBar.addTab(actionBar.newTab().setText(R.string.title_section2)
-				.setTabListener(this));
-		actionBar.addTab(actionBar.newTab().setText(R.string.title_section2)
-				.setTabListener(this));
+		// TabListener<ContactsFragment> t1 = new TabListener<ContactsFragment>(this, getResources().getString(R.string.title_section1), ContactsFragment.class );
+		actionBar.addTab(actionBar.newTab().setText(R.string.title_section1).setTabListener(getTabListener()));
+		actionBar.addTab(actionBar.newTab().setText(R.string.title_section2).setTabListener(getTabListener()));
+		actionBar.addTab(actionBar.newTab().setText(R.string.title_section3).setTabListener(getTabListener()));
 		Log.i("Activity", "onCreate");
-		
+
 		setContentView(R.layout.activity_main);
 		
-		
+		connectToServer();
 	}
-
 
 	@Override
 	  public void onDestroy() {
 	    super.onDestroy();
         // We stop the service if activity is destroyed
-	    stopService(new Intent(MainActivity.this,
-                SeTIChatService.class));
+	    if(mService != null){
+	    	stopService(new Intent(MainActivity.this,
+	                SeTIChatService.class));
+	    }
 	    // We also unregister the receivers to avoid leaks.
-        unregisterReceiver(chatMessageReceiver);
-        unregisterReceiver(openReceiver);
+	    if(chatMessageReceiver != null){
+	        unregisterReceiver(chatMessageReceiver);
+	    }
+	    if(openReceiver != null){
+	        unregisterReceiver(openReceiver);
+	    }
 	 }
 	
 	@Override
@@ -194,7 +226,9 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	protected void onActivityResult(int requestCode, int resultCode, Intent data){
 		super.onActivityResult(requestCode, resultCode, data);
 		if(requestCode==1 && resultCode==RESULT_OK){
-			startMainActivity();
+			String nickname = data.getStringExtra("nickname");
+			String phone = data.getStringExtra("phone");
+			signUp(nickname, phone);
 		}else{
 			// Show error message saying something was wrong
 			Toast.makeText(getApplicationContext(), "Error during Sign Up process. Please try again", Toast.LENGTH_SHORT).show();
@@ -237,7 +271,19 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		// When the given tab is selected, show the tab contents in the
 		// container view.
 		ContactsFragment fragment = new ContactsFragment();
-		getFragmentManager().beginTransaction().replace(R.id.container, fragment).commit();
+		switch(tab.getPosition()){
+		case 0: // Contacts
+			getFragmentManager().beginTransaction().replace(R.id.container, fragment).commit();
+			break;
+		case 1: // Recent conversations
+			getFragmentManager().beginTransaction().replace(R.id.container, fragment).commit();
+			break;
+		case 2: // Settings
+			SettingsFragment settings = new SettingsFragment();
+			getFragmentManager().beginTransaction().replace(R.id.container, settings).commit();
+			break;
+		}
+		
 	}
 
 	@Override
@@ -274,12 +320,37 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	        	Log.i("Service Connection", "Estamos en onServiceConnected");
 	            SeTIChatServiceBinder binder = (SeTIChatServiceBinder) service;
 	            mService = binder.getService();
-	         // Check User is signed up
-	    		// If it is user's first time, show sign up screen
+	            
+	            // Check User is signed up
+	    		// If it is user's first time, register
 	    		if(!signedUp){
-	    			Intent signUp = new Intent();
-	    			signUp.setClass(getApplicationContext(), SignUpActivity.class);
-	    			startActivityForResult(signUp, 1);
+	    			SharedPreferences settings = getSharedPreferences(PREFERENCES_FILE, 0);
+	    			String nick = settings.getString("nick", "");
+	    			String phone = settings.getString("serviceKey", "");
+	    			// Check data
+	    			if(nick.equalsIgnoreCase("") || phone.equalsIgnoreCase("")){
+	    				Log.e("SIGNUP", "Error retrieving info from settings");
+	    				
+	    				// Stop and go again to sign up process À?
+	    			}else{
+	    				// Create message for server
+		    			ChatMessage mes = new ChatMessage();
+		    			// Header
+		    			mes.setIdSource(phone);
+		    			mes.setIdDestination(SERVER_NAME);
+		    			mes.setType(1);
+		    			mes.setEncrypted(false);
+		    			mes.setSigned(false);
+		    			// Data
+		    			mes.setNick(nick);
+		    			mes.setMobile(phone);
+		    			
+		    			String m = mes.toString();
+		    			// Send message to server*/
+		    			mService.sendMessage(m);
+		    			
+		    			Log.i("SIGNUP", "Sign up message sent: "+m);
+	    			}
 	    		}else{
 	    			startMainActivity();
 	    		}
@@ -353,6 +424,54 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	public String getSource(){
 		SharedPreferences settings = getSharedPreferences(PREFERENCES_FILE, 0);
 		return settings.getString("sourceId", "");
+	}
+	
+	private void signUp(String nick, String phone){
+		// Check typed phone with real one (key used in service due to server restrictions)
+		SharedPreferences settings = getSharedPreferences(PREFERENCES_FILE, 0);
+		
+		// Save typed phone to start the service
+		SharedPreferences.Editor setEditor = settings.edit();
+		setEditor.putString("nick", nick);
+		setEditor.putString("serviceKey", phone);
+		setEditor.commit();
+		
+		// Start service
+		try{
+	        // Make sure the service is started.  It will continue running
+	        // until someone calls stopService().  The Intent we use to find
+	        // the service explicitly specifies our service component, because
+	        // we want it running in our own process and don't want other
+	        // applications to replace it.
+	        startService(new Intent(MainActivity.this,
+	                SeTIChatService.class));
+	        bindService(new Intent(MainActivity.this,
+					SeTIChatService.class), mConnection,
+					Context.BIND_AUTO_CREATE);
+        }catch(Exception e){
+
+    		Log.d("MainActivity", "Unknown Error", e);
+
+	        stopService(new Intent(MainActivity.this,
+	                SeTIChatService.class));
+        }
+	}
+	
+	private void connectToServer(){
+		ChatMessage m = new ChatMessage();
+		m.setIdSource(getSource());
+		m.setIdDestination(SERVER_NAME);
+		m.setType(5);
+		m.setEncrypted(false);
+		m.setSigned(false);
+		
+		String message = m.toString();
+		
+		mService.sendMessage(message);
+	}
+	
+	private TabListener getTabListener (){
+		return this;
 	}
 
 }

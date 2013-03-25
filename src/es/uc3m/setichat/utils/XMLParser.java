@@ -11,6 +11,8 @@ import org.w3c.dom.Element;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
+import android.util.Log;
+
 
 //import ChatMessage;
 
@@ -196,6 +198,7 @@ public class XMLParser {
 	 */
     public static Document loadXMLFromString(String xml) throws Exception
     {
+    	Log.i("PARSER", xml);
         DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
         DocumentBuilder builder = factory.newDocumentBuilder();
         InputSource is = new InputSource(new StringReader(xml));

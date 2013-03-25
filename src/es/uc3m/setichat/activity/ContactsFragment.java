@@ -57,27 +57,8 @@ public class ContactsFragment extends ListFragment {
 		super.onCreate(savedInstanceState);
 		// Populate list with contacts.
 		// Ey, a more fancy layout could be used! You dare?!
-		DatabaseManager dbm = new DatabaseManager(getActivity());		
-		int id = dbm.getContactsCount();
-		//SharedPreferences settings = getActivity().getSharedPreferences("SeTiChat-Settings", 0);
-		//Contact contact = new Contact(id,"100309236.100309238", "Erasmus 1");								
-		//Contact contact3 = new Contact(id,"100309238.100309236", "Erasmus 2");
-		//Contact contact2 = new Contact(id + 1,"100276600.100277382", "Jorge");
-		//dbm.addContact(contact);
-		//dbm.addContact(contact2);
-		//dbm.addContact(contact3);
-		//int j = dbm.getContactsCount();
-		List<Contact> list = dbm.getAllContacts();
-		dbm.close();
+		refreshContactList();
 		
-		String [] results = new String[list.size()];
-		int i = 0;
-		for(Contact item : list){
-			results[i] = item.getName();
-			i++;
-		}
-		setListAdapter(new ArrayAdapter<String>(getActivity(),
-				android.R.layout.simple_list_item_activated_1, results));
 	}
 
 	@Override
@@ -93,6 +74,22 @@ public class ContactsFragment extends ListFragment {
 		intent.putExtra("position", position);
 
 		startActivity(intent);
+	}
+	
+	public void refreshContactList(){
+		DatabaseManager dbm = new DatabaseManager(getActivity());		
+		int id = dbm.getContactsCount();
+		List<Contact> list = dbm.getAllContacts();
+		dbm.close();
+		
+		String [] results = new String[list.size()];
+		int i = 0;
+		for(Contact item : list){
+			results[i] = item.getName();
+			i++;
+		}
+		setListAdapter(new ArrayAdapter<String>(getActivity(),
+				android.R.layout.simple_list_item_activated_1, results));
 	}
 
 }

@@ -33,6 +33,7 @@ public class DatabaseManager extends SQLiteOpenHelper{
     private static final String CONTACT_ID = "id";
     private static final String CONTACT_IDDESTINATION = "iddestination";
     private static final String CONTACT_NAME = "name";
+    private static final String CONTACT_KEY = "publickey";
 	
 	// SQL creation statements
 	private final String conversationTable = "CREATE TABLE "+TABLE_CONVERSATIONS
@@ -41,7 +42,7 @@ public class DatabaseManager extends SQLiteOpenHelper{
 	
 	private final String contactsTable = "CREATE TABLE "+ TABLE_CONTACTS
 			+ "(" + CONTACT_ID + " INTEGER PRIMARY KEY," + CONTACT_IDDESTINATION + " TEXT,"
-			+ CONTACT_NAME + " TEXT)";
+			+ CONTACT_NAME + " TEXT, "+CONTACT_KEY+ " BLOB)";
 	
 	//private final String profileTable = "CREATE TABLE "+TABLE_PROFILE;	
 	
@@ -217,6 +218,7 @@ public class DatabaseManager extends SQLiteOpenHelper{
 	        	result.setId(cursor.getInt(0));
 	        	result.setIdDestination(cursor.getString(1));
 	        	result.setName(cursor.getString(2));
+	        	result.setPublicKey(cursor.getBlob(3));
 	        	//cursor.getString(0);
 	        }
 	        cursor.close();
@@ -248,6 +250,10 @@ public class DatabaseManager extends SQLiteOpenHelper{
 	        return result;
 	    }
 	
-
-
+	    public void dropDatabase(){
+	    	SQLiteDatabase db = this.getWritableDatabase();
+	    	db.execSQL("DROP TABLE IF EXISTS " + TABLE_CONVERSATIONS);
+			db.execSQL("DROP TABLE IF EXISTS " + TABLE_CONTACTS);
+			return;
+	    }
 }

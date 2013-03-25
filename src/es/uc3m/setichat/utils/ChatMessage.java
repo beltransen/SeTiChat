@@ -1,7 +1,10 @@
 package es.uc3m.setichat.utils;
 
 import java.util.ArrayList;
+
 import org.apache.commons.lang.RandomStringUtils;
+
+import android.content.Context;
 
 public class ChatMessage {
 	
@@ -41,6 +44,9 @@ public class ChatMessage {
 		this.signature = signature;
 	}
 
+	private Context context;
+	
+	
 	// Header fields (Mandatory)
 	private String idSource;
 	private String idDestination;
@@ -226,6 +232,14 @@ public class ChatMessage {
 		this.signature = signature;
 	}
 	
+	public Context getContext() {
+		return context;
+	}
+
+	public void setContext(Context context) {
+		this.context = context;
+	}
+	
 	public String toString(){
 		String xml = "<?xml version=\"1.0\" encoding=\"UTF-8\"?><message>";
 		
@@ -264,7 +278,9 @@ public class ChatMessage {
 			contentBlock += "</contactList>";
 			break;
 		case 4: // Chat Message
-			String mes = (String) ((this.encrypted) ? Base64.encodeToString(this.chatMessage.getBytes(), false): this.chatMessage);
+			DatabaseManager dbm = new DatabaseManager(getContext());
+			SecurityModule sm = new SecurityModule(dbm.getContact(this.idDestination));
+			String mes = (String) ((this.encrypted) ? Base64.encodeToString(sm.encrypt(this.chatMessage), false): this.chatMessage);
 			contentBlock += "<chatMessage>"+mes+"</chatMessage>";
 			break;
 		case 5: // Connection
@@ -309,4 +325,6 @@ public class ChatMessage {
 		xml += headerBlock + contentBlock + signatureBlock+"</message>";
 		return xml;
 	}
+
+	
 }
