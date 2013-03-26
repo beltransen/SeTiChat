@@ -75,6 +75,19 @@ public class SeTIChatService extends Service implements ChannelService {
 		this.connect(phoneNumber);  
 	    binder.onCreate(this);
 	    
+	    if(settings.getBoolean("registered", false) == true)
+	    {
+	    	ChatMessage cm = new ChatMessage();
+			cm.setType(5);
+			cm.setIdSource(settings.getString("sourceId", ""));
+			cm.setIdDestination("setichat@appspot.com");
+			cm.setEncrypted(false);
+			cm.setSigned(false);
+			cm.setIdMessage("2d46f3c49a2c6b7a2");			
+			sendMessage(cm.toString());
+	    }
+
+	    
 	  }
 
 	  @Override
@@ -112,7 +125,7 @@ public class SeTIChatService extends Service implements ChannelService {
 					 try {
 							channel = new ChannelAPI("https://setichat.appspot.com", key, current); //Production Example /*tester847*/
 							channel.open();
-							
+														
 						} catch (Exception e){
 							System.out.println("Something went wrong...");
 							Log.i("Service connect", "Error connecting..."+e.getLocalizedMessage());
