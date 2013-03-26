@@ -19,6 +19,8 @@ import es.uc3m.setichat.utils.datamodel.Contact;
 
 public class SecurityModule {
 	
+	private static final int RSA_LENGTH = 0;
+	private static final int VECTOR_LENGTH = 0;
 	private final String PREFERENCES_FILE = "SeTiChat-Settings";
 	private final String SERVER_NAME = "setichat@appspot.com";
 	private Contact contact;
@@ -107,6 +109,8 @@ public class SecurityModule {
 	
 	public String decrypt (String content, String privateKey){
 		byte [] bContent = content.getBytes();
+		
+		//TODO: Inicializar RSA_LENGTH y VECTOR_LENGTH con los valores correspondientes
 		byte [] rsaKey = new byte [RSA_LENGTH];
 		byte [] iv = new byte [VECTOR_LENGTH];
 		ArrayList <Byte> aesContent = new ArrayList();
