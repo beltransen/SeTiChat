@@ -136,9 +136,9 @@ public class SeTIChatConversationActivity extends Activity {
 		    	ChatMessage mes = XMLParser.XMLtoMessage(m);
 		    	if(mes.getResponseCode() == 200)
 		    	{
-		    		text.append("\u2713 \n");
+		    		text.append("\u2713 Sent\n");
 		    	}else{
-		    		text.append(mes.getChatMessage() + "\n");
+		    		text.append(mes.getChatMessage() + " \u2713 Received\n");
 		    	}
 		    }
 		  };
