@@ -105,7 +105,7 @@ public class RecentConversationFragment extends ListFragment {
 			
 			if(cont != null){
 				for(int j = 0; j< results.size(); j++){
-					if(results.get(j) != null && results.get(j).equalsIgnoreCase(cont.getId() + " " + cont.getName())) repeated = true;
+					if(results.get(j) != null && results.get(j).equalsIgnoreCase((cont.getId() + 1) + " " + cont.getName())) repeated = true;
 					if(results.get(j) == null || repeated) break;
 				}
 				if(repeated == false && !cont.getName().equalsIgnoreCase("setichat@appspot.com")){
