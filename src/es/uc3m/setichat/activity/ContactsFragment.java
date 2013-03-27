@@ -87,7 +87,7 @@ public class ContactsFragment extends ListFragment {
 		String [] results = new String[list.size()];
 		int i = 0;
 		for(Contact item : list){
-			results[i] = item.getName();
+			results[i] = (item.getId() + 1) + " " +item.getName();
 			i++;
 		}
 		setListAdapter(new ArrayAdapter<String>(getActivity(),

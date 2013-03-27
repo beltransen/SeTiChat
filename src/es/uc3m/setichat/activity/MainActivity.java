@@ -268,7 +268,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			getFragmentManager().beginTransaction().replace(R.id.container, fragment).commit();
 			break;
 		case 1: // Recent conversations
-			getFragmentManager().beginTransaction().replace(R.id.container, fragment).commit();
+			RecentConversationFragment recent = new RecentConversationFragment();
+			getFragmentManager().beginTransaction().replace(R.id.container, recent).commit();
 			break;
 		case 2: // Settings
 			SettingsFragment settings = new SettingsFragment();
