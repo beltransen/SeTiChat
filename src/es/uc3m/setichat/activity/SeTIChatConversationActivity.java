@@ -140,7 +140,9 @@ public class SeTIChatConversationActivity extends Activity {
 		    	}else{
 		    		if(mes.getChatMessage() != null)
 		    		{
-		    			text.append(mes.getChatMessage() + " \u2713 Received\n");
+		    			text.append(mes.getChatMessage() + " \u2713");
+		    			text.append((mes.isEncrypted()) ? "\u2713" :"X");
+		    			text.append((mes.isSigned()) ? "\u2713 Received \n" :"X Received \n");
 		    		}
 		    	}
 		    }
