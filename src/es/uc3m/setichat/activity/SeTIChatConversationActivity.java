@@ -133,7 +133,18 @@ public class SeTIChatConversationActivity extends Activity {
 		    	
 				// Append message contained in the Intent to message list
 		    	String m = intent.getStringExtra("message");
-				text.append("\u2713 \n");				
+		    	ChatMessage mes = XMLParser.XMLtoMessage(m);		    	
+		    	if(mes.getResponseCode() == 200)
+		    	{
+		    		text.append("\u2713 Sent\n");
+		    	}else{
+		    		if(mes.getChatMessage() != null)
+		    		{
+		    			text.append(mes.getChatMessage() + " \u2713");
+		    			text.append((mes.isEncrypted()) ? "\u2713" :"X");
+		    			text.append((mes.isSigned()) ? "\u2713 Received \n" :"X Received \n");
+		    		}
+		    	}
 		    }
 		  };
 			  
