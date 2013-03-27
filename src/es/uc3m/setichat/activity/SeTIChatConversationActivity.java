@@ -133,7 +133,13 @@ public class SeTIChatConversationActivity extends Activity {
 		    	
 				// Append message contained in the Intent to message list
 		    	String m = intent.getStringExtra("message");
-				text.append("\u2713 \n");				
+		    	ChatMessage mes = XMLParser.XMLtoMessage(m);
+		    	if(mes.getResponseCode() == 200)
+		    	{
+		    		text.append("\u2713 \n");
+		    	}else{
+		    		text.append(mes.getChatMessage() + "\n");
+		    	}
 		    }
 		  };
 			  

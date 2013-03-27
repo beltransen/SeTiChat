@@ -225,8 +225,8 @@ public class SeTIChatService extends Service implements ChannelService {
 				dbm.close();
 			}else{
 				if(m.getType()==4){ // If it is a chat message
-					DatabaseManager dbm = new DatabaseManager(this);					
-					Conversation conv = new Conversation(dbm.getConversationsCount(), "", Calendar.getInstance().getTime().toString(), m.getIdSource());
+					DatabaseManager dbm = new DatabaseManager(getApplicationContext());					
+					Conversation conv = new Conversation(dbm.getConversationsCount(), message, Calendar.getInstance().getTime().toString(), m.getIdSource());
 					dbm.addConversation(conv);
 					dbm.close();
 					
