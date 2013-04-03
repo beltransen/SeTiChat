@@ -4,14 +4,6 @@ import java.sql.Time;
 import java.util.Calendar;
 import java.util.List;
 
-import es.uc3m.setichat.service.SeTIChatService;
-import es.uc3m.setichat.service.SeTIChatServiceBinder;
-import es.uc3m.setichat.utils.ChatMessage;
-import es.uc3m.setichat.utils.DatabaseManager;
-import es.uc3m.setichat.utils.XMLParser;
-import es.uc3m.setichat.utils.datamodel.Contact;
-import es.uc3m.setichat.utils.datamodel.Conversation;
-
 import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
@@ -33,6 +25,14 @@ import android.widget.LinearLayout.LayoutParams;
 import android.widget.ScrollView;
 import android.widget.TextView;
 import android.widget.Toast;
+import es.uc3m.setichat.service.SeTIChatService;
+import es.uc3m.setichat.service.SeTIChatServiceBinder;
+import es.uc3m.setichat.utils.ChatMessage;
+import es.uc3m.setichat.utils.DatabaseManager;
+import es.uc3m.setichat.utils.SecurityModule;
+import es.uc3m.setichat.utils.XMLParser;
+import es.uc3m.setichat.utils.datamodel.Contact;
+import es.uc3m.setichat.utils.datamodel.Conversation;
 
 /**
  * This activity will show the conversation with a given contact. 
@@ -221,17 +221,18 @@ public class SeTIChatConversationActivity extends Activity {
 		//Get previous conversations
 		DatabaseManager dbm = new DatabaseManager(this);
 		List<Conversation> conv = dbm.getAllConversations(idDestination);
-		if(conv != null)
-		{
+		if(conv != null) {
+			SecurityModule sc = new SecurityModule();
 			for(Conversation item : conv){
 				String message = item.getText();
-				ChatMessage content = XMLParser.XMLtoMessage(message);
-				if(content.getType() == 4)
-				{
-					text.append(content.getChatMessage() + " on " +item.getDate() + "\n");
-				}
+				ChatMessage m = XMLParser.XMLtoMessage(message);
 				
-		}
+				if(m.isEncrypted()){
+					text.append(sc.decrypt(m.getChatMessage()) + " on " +item.getDate() + "\n");
+				}else{
+					text.append(m.getChatMessage() + " on " +item.getDate() + "\n");
+				}
+			}
 		}
 		
 		dbm.close();
@@ -298,7 +299,7 @@ public class SeTIChatConversationActivity extends Activity {
 				
 				DatabaseManager dbm = new DatabaseManager(getApplicationContext());
 				Conversation conv = new Conversation();
-				conv.setidsource(objmessage.getIdDestination());
+				conv.setidsource(objmessage.getIdDestination()); // 
 				conv.setText(objmessage.toString());
 				conv.setDate(Calendar.getInstance().getTime().toString());
 				conv.setID(dbm.getConversationsCount());

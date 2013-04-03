@@ -1,5 +1,7 @@
 package es.uc3m.setichat.activity;
 
+import java.security.KeyPair;
+
 import android.app.Activity;
 import android.app.Fragment;
 import android.content.SharedPreferences;
@@ -9,13 +11,13 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.Switch;
-import android.widget.TextView;
 import android.widget.Toast;
 import es.uc3m.setichat.R;
 import es.uc3m.setichat.service.SeTIChatService;
+import es.uc3m.setichat.utils.Base64;
 import es.uc3m.setichat.utils.ChatMessage;
+import es.uc3m.setichat.utils.KeyStoreManager;
 
 /**
  * This activity will show the list of contacts. If a contact is clicked, a new
@@ -29,8 +31,8 @@ public class SettingsFragment extends Fragment {
 
 	private final String PREFERENCES_FILE = "SeTiChat-Settings";
 	private final String SERVER_NAME = "setichat@appspot.com";
+	private final String KEYSTORE_NAME = "settichat_keystore";
 	private Switch encrypt, sign;
-	private TextView t_privateKey, t_publicKey;
 
 	// Service, that may be used to access chat features
 	private SeTIChatService mService;
@@ -43,7 +45,6 @@ public class SettingsFragment extends Fragment {
 
 	@Override
 	public void onAttach(Activity activity) {
-		// TODO Auto-generated method stub
 		super.onAttach(activity);
 		mService = ((MainActivity) activity).getService();
 	}
@@ -69,19 +70,10 @@ public class SettingsFragment extends Fragment {
 		encrypt = (Switch) myFragmentView.findViewById(R.id.encryptMessages);
 		sign = (Switch) myFragmentView.findViewById(R.id.signMessages);
 		
-		// TextViews
-		t_publicKey = (TextView) myFragmentView.findViewById(R.id.t_publickey);
-		t_privateKey = (TextView) myFragmentView.findViewById(R.id.t_privatekey);
-		
 		// Show actual settings
 		boolean [] savedSettings = getSettings();
 		encrypt.setChecked(savedSettings[0]);
 		sign.setChecked(savedSettings[1]);
-		
-		// Show actual keys
-		String[] currentKeys = getKeys();
-		t_publicKey.setText(currentKeys[0]);
-		t_privateKey.setText(currentKeys[1]);
 		
 		// Create listeners for the buttons
 		Button newKeys = (Button) myFragmentView.findViewById(R.id.getkey);
@@ -91,13 +83,9 @@ public class SettingsFragment extends Fragment {
 
 			@Override
 			public void onClick(View v) {
-				// Generate new keys
-				String publicKey = "";
-				String privateKey = "";
-				
-				// Store keys in preferences
-				saveKeys(publicKey, privateKey);
-				
+				KeyPair kp = KeyStoreManager.generateNewKeys(KEYSTORE_NAME);
+				// Cast PublicKey to String to send message
+				String publicKey = Base64.encodeToString(kp.getPublic().getEncoded(), false);
 				// Create Upload message
 				ChatMessage mes = new ChatMessage();
 				mes.setIdSource(getSource());
@@ -111,7 +99,10 @@ public class SettingsFragment extends Fragment {
 				// Send Upload message to server
 				mService.sendMessage(mes.toString());
 				
-				Log.i("SETTINGS", "Sent Upload message");
+				Log.i("PRIVATE", kp.getPrivate().toString());
+				Log.i("PUBLIC", kp.getPublic().toString());
+				
+				Log.i("SETTINGS", "Sent UploadKeys message");
 			}
 		});
 		
@@ -120,7 +111,6 @@ public class SettingsFragment extends Fragment {
 			@Override
 			public void onClick(View v) {
 				// Collect settings 
-				
 				boolean encryption = encrypt.isChecked();
 				boolean signature = sign.isChecked();
 				
@@ -131,23 +121,6 @@ public class SettingsFragment extends Fragment {
 				
 				// Notify user
 				Toast.makeText(getActivity(), "Settings have been saved", Toast.LENGTH_SHORT).show();
-			}
-		});
-		
-		// Create listeners for Signature switcher
-		sign.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener(){
-
-			@Override
-			public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-				if(isChecked){
-					// Check if there are keys, otherwise notify user and turn off the button
-					String[] keys = getKeys();
-					if(keys[0]==null){
-						Toast.makeText(getActivity(), "Please first generate keys to allow messages signature", Toast.LENGTH_SHORT).show();
-						sign.setChecked(false);
-						Log.i("SETTINGS", "There aren't keys. Signature SWITCHED OFF");
-					}
-				}
 			}
 		});
 		
@@ -165,19 +138,6 @@ public class SettingsFragment extends Fragment {
 	private boolean[] getSettings(){
 		SharedPreferences settings = getActivity().getSharedPreferences(PREFERENCES_FILE, 0);
 		return new boolean[]{settings.getBoolean("encryption", false), settings.getBoolean("signature", false)};
-	}
-
-	private void saveKeys(String pu, String pr){
-		SharedPreferences settings = getActivity().getSharedPreferences(PREFERENCES_FILE, 0);
-		SharedPreferences.Editor editor = settings.edit();
-		editor.putString("publickey", pu);
-		editor.putString("privatekey", pr);
-		editor.commit();
-	}
-
-	private String[] getKeys(){
-		SharedPreferences settings = getActivity().getSharedPreferences(PREFERENCES_FILE, 0);
-		return new String[]{settings.getString("publickey", null), settings.getString("privatekey", null)};
 	}
 
 	public String getSource(){
