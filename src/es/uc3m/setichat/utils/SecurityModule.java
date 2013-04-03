@@ -1,20 +1,20 @@
 package es.uc3m.setichat.utils;
 
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.UnsupportedEncodingException;
 import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
+import java.security.KeyFactory;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
+import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.security.PrivateKey;
 import java.security.PublicKey;
 import java.security.Signature;
 import java.security.SignatureException;
-import java.security.cert.CertificateException;
-import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
+import java.security.spec.InvalidKeySpecException;
+import java.security.spec.X509EncodedKeySpec;
 import java.util.Random;
 
 import javax.crypto.BadPaddingException;
@@ -35,11 +35,14 @@ public class SecurityModule {
 	private static final int VECTOR_LENGTH = 16;
 	private final String PREFERENCES_FILE = "SeTiChat-Settings";
 	private final String SERVER_NAME = "setichat@appspot.com";
+	private final String KEYSTORE_NAME = "settichat_keystore";
 	private Contact contact;
 	
-	public SecurityModule(Contact contact){
+	public SecurityModule(Contact contact){ // Needed for encryption
 		this.contact = contact;
 	}
+	
+	public SecurityModule(){}
 	
 	public Contact getContact() {
 		return contact;
@@ -49,39 +52,23 @@ public class SecurityModule {
 		this.contact = contact;
 	}
 
-	
-	
-	public byte[] encrypt(String content){
-		
-		sign(content);
-		
-		KeyPairGenerator keyGen = null;
+	public byte[] encrypt(String content, Contact contact){
+		Log.i("ENCRYPTION", "ENCTRYPTED");
+        PublicKey publicKey = null;
 		try {
-			keyGen = KeyPairGenerator.getInstance("RSA");
-	        keyGen.initialize(512);
-		} catch (NoSuchAlgorithmException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-			Log.e("KEYPAIRGENERATOR", "ERROR CREATING KEYS");
-		}
-		
-        KeyPair kp = keyGen.genKeyPair();
-        
-        PrivateKey privateKey = kp.getPrivate();
-        PublicKey publicKey = kp.getPublic();
-        
-		Log.i("ORIGINAL MESSAGE", content);
+			byte [] key = contact.getPublicKey();
+			if(key==null){return null;}
+			publicKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(contact.getPublicKey()));
+		} catch (Exception e) {
+			e.printStackTrace();
+			return null;
+		} 
 		// Gen random key
 		byte [] k = new byte[16];
 		new Random().nextBytes(k);
 		
-		byte[] c = null;
-		try {
-			c = content.getBytes("UTF-8");
-		} catch (UnsupportedEncodingException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+		byte[] c = Base64.decode(content);
+		
 		byte [] encryptedMessage = null;
 		
 		// Cipher initialization
@@ -111,32 +98,15 @@ public class SecurityModule {
 		
 		// Encrypt key
 		byte [] RSA = encryptRSA(k, publicKey);
-		Log.i("RSAKEY", "Length : "+RSA.length);
-		Log.i("IVECTOR", "Length : "+cipher.getIV().length);
 		byte [] xml = ArrayUtils.addAll(ArrayUtils.addAll(RSA, cipher.getIV()), encryptedMessage);
-		Log.i("CONTENT", "SIZE: "+xml.length);
-		Log.i("CODED MESSAGE XML", new String(xml));
-		
 		byte [] codedMessage = Base64.encodeToByte(xml, false);
-		Log.i("base64 MESSAGE", new String(codedMessage));
-		
-		byte[]xml2 = Base64.decode(codedMessage);
-		Log.i("CODED MESSAGE XML2", new String(xml2));
-		
-		Log.i("BASE64 CHECK","ARE EQUALS: "+ArrayUtils.isEquals(xml, xml2));
-		
-		// PRUEBA DE DESENCRIPTADO
-		String prueba = decrypt(xml, privateKey);
 
-		Log.i("ORIGINAL MESSAGE AFTER DECODING", prueba);
-		
-		Log.d("ENCRYPTION", "RESULT: "+prueba.equalsIgnoreCase(content));
-		
-		return xml;
+		Log.i("ENCRYPTION", "FINISHED WITHOUT ERRORS");
+		return codedMessage;
 	}
 	
 	private byte[] encryptRSA(byte[] key, PublicKey publicKey){
-		//byte[] keyContact = getContact().getPublicKey();
+		Log.i("RSA", "ENCRYPTING...");
 		byte [] result = null;
 		Cipher publicKeyCipher = null;
 		try {
@@ -159,11 +129,16 @@ public class SecurityModule {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		Log.i("RSA", "ENCTRYPTED...");
 		return result;
 	}
 	
-	public String decrypt (byte[] bContent, PrivateKey privateKey){
-		//TODO: Inicializar RSA_LENGTH y VECTOR_LENGTH con los valores correspondientes
+	public String decrypt (String content){
+		Log.i("DECRYPTION", "STARTING...");
+		
+		byte [] bContent = Base64.decode(content);
+        PrivateKey privateKey = KeyStoreManager.getPrivateKey(KEYSTORE_NAME);
+        
 		byte [] rsaKey = new byte [RSA_LENGTH];
 		byte [] iv = new byte [VECTOR_LENGTH];
 		byte [] aesContent = null;
@@ -211,19 +186,12 @@ public class SecurityModule {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
-		String result = null;
-		try {
-			result = new String(originalMessage, "UTF-8");
-		} catch (UnsupportedEncodingException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		return result;
+		Log.i("DECRYPTION", "FINISHED WITHOUT ERRORS");
+		return Base64.encodeToString(originalMessage, false);
 	}
 	
 	private byte[] decryptRSA(PrivateKey privateKey, byte[]rsaKey){
-		//byte[] pKey = privateKey.getBytes();
+		Log.i("RSA", "DECRYPTING...");
 		byte [] result = null;
 		Cipher cipher = null;
 		try {
@@ -246,32 +214,14 @@ public class SecurityModule {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		Log.i("RSA", "DECRYPTED");
 		return result;
 	}
 	
-	public boolean sign(String content){
-		KeyPairGenerator keyGen = null;
-		try {
-			keyGen = KeyPairGenerator.getInstance("RSA");
-	        keyGen.initialize(512);
-		} catch (NoSuchAlgorithmException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-			Log.e("KEYPAIRGENERATOR", "ERROR CREATING KEYS");
-		}
-		
-        KeyPair kp = keyGen.genKeyPair();
-        
-        PrivateKey privateKey = kp.getPrivate();
-        PublicKey publicKey = kp.getPublic();
-        
-        byte[] bContent = null;
-		try {
-			bContent = content.getBytes("UTF-8");
-		} catch (UnsupportedEncodingException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
+	public String sign(String content){
+		Log.i("SIGNATURE", "SIGNING...");
+		PrivateKey privateKey = KeyStoreManager.getPrivateKey(KEYSTORE_NAME);
+		byte[] bContent = Base64.decode(content);
         // Signing
 		Signature sign = null;
 		byte [] signatureResult = null;
@@ -290,21 +240,38 @@ public class SecurityModule {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-        
-        byte [] b64code = Base64.encodeToByte(signatureResult, false);
-        
+		String b64code = Base64.encodeToString(signatureResult, false);
+
+		Log.i("SIGNATURE", "SIGNED");
+        return b64code;
+	}
+	
+	public boolean verifySignature (String content, byte[] b64signature){
+		Log.i("SIGNATURE", "VERIFYING...");
+		Signature sign = null;
+		PublicKey publicKey = null;
+		try {
+			byte [] key = contact.getPublicKey();
+			if(key==null){return false;}
+			publicKey = KeyFactory.getInstance("RSA").generatePublic(new X509EncodedKeySpec(contact.getPublicKey()));
+		} catch (Exception e) {
+			e.printStackTrace();
+			return false;
+		} 
         // Verifying
-        byte [] b64decode = Base64.decode(b64code);
-        
-        Log.d("SIGNING", "RESULT: "+ArrayUtils.isEquals(signatureResult, b64decode));
+        byte [] b64decode = Base64.decode(content);
         
         try {
+        	sign = Signature.getInstance("SHA1withRSA");
 			sign.initVerify(publicKey);
-	        sign.update(bContent);
+	        sign.update(b64decode);
 		} catch (InvalidKeyException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		} catch (SignatureException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		} catch (NoSuchAlgorithmException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
@@ -312,12 +279,13 @@ public class SecurityModule {
         // Return verification result
         boolean result = false;
 		try {
-			result = sign.verify(signatureResult);
+			result = sign.verify(b64signature);
 		} catch (SignatureException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-        Log.d("SIGNING", ""+result);
+
+		Log.i("SIGNATURE", "RESULT: "+result);
 		return result;
 	}
 }

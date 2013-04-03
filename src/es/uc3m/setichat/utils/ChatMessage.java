@@ -28,7 +28,6 @@ public class ChatMessage {
 		super();
 		this.idSource = idSource;
 		this.idDestination = idDestination;
-		this.idMessage = idMessage;
 		this.encrypted = encrypted;
 		this.signed = signed;
 		this.type = type;
@@ -43,6 +42,7 @@ public class ChatMessage {
 		this.publicKey = publicKey;
 		this.key = key;
 		this.signature = signature;
+		this.idMessage = getNewId();
 		
 		this.context = context;
 	}
@@ -50,6 +50,7 @@ public class ChatMessage {
 	public ChatMessage(Context context) {
 		// TODO Auto-generated constructor stub
 		this.context = context;
+		this.idMessage = getNewId();
 	}
 
 	private Context context;
@@ -289,8 +290,8 @@ public class ChatMessage {
 			DatabaseManager dbm = new DatabaseManager(getContext());
 			Contact c = dbm.getContact(this.idDestination);
 			SecurityModule sm = new SecurityModule(c);
-			String mes = (String) ((this.encrypted) ? Base64.encodeToString(sm.encrypt(this.chatMessage), false): this.chatMessage);
-			contentBlock += "<chatMessage>"+mes+"</chatMessage>";
+			this.chatMessage = ((this.encrypted) ? Base64.encodeToString(sm.encrypt(this.chatMessage, c), false): this.chatMessage);
+			contentBlock += "<chatMessage>"+this.chatMessage+"</chatMessage>";
 			break;
 		case 5: // Connection
 			contentBlock += "<connection></connection>";
@@ -303,20 +304,20 @@ public class ChatMessage {
 		case 7: // Revocation
 			contentBlock += "<revokedMobile>"+this.revokedMobile+"</revokedMobile>";
 			break;
-		case 8: // KeyRequest
-			contentBlock += "<keyrequest>";
-			contentBlock += "<type>"+(String) ((this.publicKey) ? "public" : "private") +"</type><mobile>"+this.mobile+"</mobile>";
-			contentBlock += "</keyrequest>";
-			break;
-		case 9: // Download
+		case 8: // Download
 			contentBlock += "<download>";
 			contentBlock += "<key>"+this.key+"</key><type>"+(String) ((this.publicKey) ? "public" : "private") +"</type><mobile>"+this.mobile+"</mobile>";
 			contentBlock += "</download>";
 			break;
-		case 10: // Upload
+		case 9: // Upload
 			contentBlock += "<upload>";
 			contentBlock += "<key>"+this.key+"</key><type>"+(String) ((this.publicKey) ? "public" : "private") + "</type>";
 			contentBlock += "</upload>";
+			break;
+		case 10: // KeyRequest
+			contentBlock += "<keyrequest>";
+			contentBlock += "<type>"+(String) ((this.publicKey) ? "public" : "private") +"</type><mobile>"+this.mobile+"</mobile>";
+			contentBlock += "</keyrequest>";
 			break;
 		}
 		
@@ -325,8 +326,11 @@ public class ChatMessage {
 		String signatureBlock = "";
 		// Generate <signature>
 		if(this.signed){
+			SecurityModule sm = new SecurityModule();
+			String contentToSign= "<idDestination>"+this.idDestination+"</idDestination>"+"<idMessage>"+this.idMessage+"</idMessage>"+"<content>"+this.chatMessage+"</content>";
+			String signature = sm.sign(contentToSign); 
 			signatureBlock += "<signature>";
-			signatureBlock += (String) ((this.encrypted) ? Base64.encodeToString(this.signature, false) : this.signature);
+			signatureBlock += signature;
 			signatureBlock += "</signature>";
 		}
 		
