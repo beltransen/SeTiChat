@@ -173,7 +173,7 @@ public class XMLParser {
 			if(n3.getLength() != 0)
 			{
 				Element signature = (Element)n3.item(0);
-				messageobj.setSignature(getTextValue(signature, "signature").getBytes());
+				messageobj.setSignature(Base64.decode(getTextValue(signature, "signature")));
 			}
 
 
