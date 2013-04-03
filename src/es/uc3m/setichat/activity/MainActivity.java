@@ -1,5 +1,6 @@
 package es.uc3m.setichat.activity;
 
+import java.security.KeyPair;
 import java.util.ArrayList;
 
 import android.app.ActionBar;
@@ -25,7 +26,9 @@ import android.widget.Toast;
 import es.uc3m.setichat.R;
 import es.uc3m.setichat.service.SeTIChatService;
 import es.uc3m.setichat.service.SeTIChatServiceBinder;
+import es.uc3m.setichat.utils.Base64;
 import es.uc3m.setichat.utils.ChatMessage;
+import es.uc3m.setichat.utils.KeyStoreManager;
 import es.uc3m.setichat.utils.XMLParser;
 
 /**
@@ -49,9 +52,10 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	private BroadcastReceiver chatMessageReceiver;
 	
 	// Needed variables
-	private boolean signedUp;
+	private boolean signedUp, haveKeys;
 	private final String PREFERENCES_FILE = "SeTiChat-Settings";
 	private final String SERVER_NAME = "setichat@appspot.com";
+	private final String KEYSTORE_NAME = "settichat_keystore";
 	private static ContentResolver cr;	
 	
 	@Override
@@ -59,7 +63,6 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		super.onCreate(savedInstanceState);
 		SharedPreferences settings = getSharedPreferences(PREFERENCES_FILE, 0);
 		signedUp = settings.getBoolean("registered", false);
-		
 		
 		// Create and register broadcast receivers
 		IntentFilter openFilter = new IntentFilter();
@@ -148,6 +151,40 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	}
 	
 	private void startMainActivity() {
+		// Generate keys at first time system is booted
+		SharedPreferences settings = getSharedPreferences(PREFERENCES_FILE, 0);
+		haveKeys = settings.getBoolean("generatedKeys", false);
+		KeyPair kp = null;
+		
+		if(!haveKeys){
+			Log.i("KEYS", "FIRST BOOT. NO KEYS FOUND. GENERATING...");
+			kp = KeyStoreManager.generateNewKeys(KEYSTORE_NAME);
+			String publicKey = Base64.encodeToString(kp.getPublic().getEncoded(), false);
+			// Create Upload message
+			ChatMessage mes = new ChatMessage();
+			mes.setIdSource(getSource());
+			mes.setIdDestination(SERVER_NAME);
+			mes.setType(9);
+			mes.setEncrypted(false);
+			mes.setSigned(false);
+			mes.setKey(publicKey);
+			mes.setPublicKey(true);
+			
+			// Send Upload message to server
+			mService.sendMessage(mes.toString());
+			
+			Log.i("PRIVATE", kp.getPrivate().toString());
+			Log.i("PUBLIC", kp.getPublic().toString());
+			
+			// Set flag in settings for further boots
+			SharedPreferences.Editor edit = settings.edit();
+			edit.putBoolean("generatedKeys", true);
+			edit.commit();
+			
+			Log.i("KEYS", "KEY GENERATION FINISHED WITHOUT ERRORS. USER NOW READY FOR SECURITY FEATURES");
+		}
+		
+		
 		// Check for new contacts
 		ArrayList<String[]> contactList = getContacts();
 		String[] mobileList = new String[contactList.size()]; 
@@ -320,30 +357,23 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 	    			SharedPreferences settings = getSharedPreferences(PREFERENCES_FILE, 0);
 	    			String nick = settings.getString("nick", "");
 	    			String phone = settings.getString("serviceKey", "");
-	    			// Check data
-	    			if(nick.equalsIgnoreCase("") || phone.equalsIgnoreCase("")){
-	    				Log.e("SIGNUP", "Error retrieving info from settings");
-	    				
-	    				// Stop and go again to sign up process À?
-	    			}else{
-	    				// Create message for server
-		    			ChatMessage mes = new ChatMessage();
-		    			// Header
-		    			mes.setIdSource(phone);
-		    			mes.setIdDestination(SERVER_NAME);
-		    			mes.setType(1);
-		    			mes.setEncrypted(false);
-		    			mes.setSigned(false);
-		    			// Data
-		    			mes.setNick(nick);
-		    			mes.setMobile(phone);
-		    			
-		    			String m = mes.toString();
-		    			// Send message to server*/
-		    			mService.sendMessage(m);
-		    			
-		    			Log.i("SIGNUP", "Sign up message sent: "+m);
-	    			}
+	    			// Create message for server
+	    			ChatMessage mes = new ChatMessage();
+	    			// Header
+	    			mes.setIdSource(phone);
+	    			mes.setIdDestination(SERVER_NAME);
+	    			mes.setType(1);
+	    			mes.setEncrypted(false);
+	    			mes.setSigned(false);
+	    			// Data
+	    			mes.setNick(nick);
+	    			mes.setMobile(phone);
+	    			
+	    			String m = mes.toString();
+	    			// Send message to server*/
+	    			mService.sendMessage(m);
+	    			
+	    			Log.i("SIGNUP", "Sign up message sent: "+m);
 	    		}else{
 	    			startMainActivity();
 	    		}
