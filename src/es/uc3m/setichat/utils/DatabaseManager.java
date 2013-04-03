@@ -38,7 +38,7 @@ public class DatabaseManager extends SQLiteOpenHelper{
 	// SQL creation statements
 	private final String conversationTable = "CREATE TABLE "+TABLE_CONVERSATIONS
 			+ "(" + CONVERSATION_ID + " INTEGER PRIMARY KEY," + CONVERSATION_IDSOURCE + " TEXT,"
-			+ CONVERATION_TEXT + " TEXT," + CONVERATION_DATE + " TEXT)";
+			+ CONVERATION_TEXT + " TEXT," + CONVERATION_DATE + " TEXT";
 	
 	private final String contactsTable = "CREATE TABLE "+ TABLE_CONTACTS
 			+ "(" + CONTACT_ID + " INTEGER PRIMARY KEY," + CONTACT_IDDESTINATION + " TEXT,"
@@ -94,8 +94,8 @@ public class DatabaseManager extends SQLiteOpenHelper{
 	 
 	    ContentValues values = new ContentValues();	  
 	    values.put(CONVERSATION_ID, conv.getID());
-	    values.put(CONVERATION_TEXT, conv.getText()); // Contact Name
-	    values.put(CONVERSATION_IDSOURCE, conv.getidsource());
+	    values.put(CONVERATION_TEXT, conv.getText()); // Message
+	    values.put(CONVERSATION_IDSOURCE, conv.getidsource()); // Contact ID
 	    values.put(CONVERATION_DATE, conv.getDate());
 	 
 	    // Inserting Row
