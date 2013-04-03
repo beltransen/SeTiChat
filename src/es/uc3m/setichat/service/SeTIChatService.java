@@ -26,6 +26,7 @@ import edu.gvsu.cis.masl.channelAPI.ChannelService;
 import es.uc3m.setichat.activity.SeTIChatConversationActivity;
 import es.uc3m.setichat.utils.ChatMessage;
 import es.uc3m.setichat.utils.DatabaseManager;
+import es.uc3m.setichat.utils.SecurityModule;
 import es.uc3m.setichat.utils.XMLParser;
 import es.uc3m.setichat.utils.datamodel.Contact;
 import es.uc3m.setichat.utils.datamodel.Conversation;
@@ -48,7 +49,6 @@ public class SeTIChatService extends Service implements ChannelService {
 	private final SeTIChatServiceBinder binder=new SeTIChatServiceBinder();
 	
 	// Needed variables
-	private boolean signedUp;
 	private final String PREFERENCES_FILE = "SeTiChat-Settings";
 
 	
@@ -200,9 +200,9 @@ public class SeTIChatService extends Service implements ChannelService {
 		  */
 		@Override
 		public void onMessage(String message) {
-			Log.i("onMessage", "Message received :"+message);
 			// Extract message type (server or user) to decide handler
 			ChatMessage m = XMLParser.XMLtoMessage(message);
+			Log.i("onMessage", "Message received :"+m.toString());
 			
 			// Broadcast to Main Activity
 			String intentKey = "es.uc3m.SeTIChat.CHAT_INTERNALMESSAGE";
@@ -225,7 +225,20 @@ public class SeTIChatService extends Service implements ChannelService {
 				dbm.close();
 			}else{
 				if(m.getType()==4){ // If it is a chat message
-					DatabaseManager dbm = new DatabaseManager(getApplicationContext());					
+					DatabaseManager dbm = new DatabaseManager(getApplicationContext());	
+					// Check if it is signed
+					if(m.isSigned()){
+						// Verify signature
+						SecurityModule sc = new SecurityModule(dbm.getContact(m.getIdSource()));
+						String signedContent = "<idDestination>"+m.getIdDestination()+"</idDestination>"+"<idMessage>"+m.getIdMessage()+"</idMessage>"+"<content>"+m.getChatMessage()+"</content>";
+						boolean authenticMessage = sc.verifySignature(signedContent, m.getSignature());
+						if(!authenticMessage){
+							Log.i("onMessage", "INCOMING MESSAGE IS CORRUPTED");
+							return;
+						}
+						Log.i("onMessage", "MESSAGE SIGNATURE VERIFIED");
+					}
+									
 					Conversation conv = new Conversation(dbm.getConversationsCount(), message, Calendar.getInstance().getTime().toString(), m.getIdSource());
 					dbm.addConversation(conv);
 					dbm.close();
