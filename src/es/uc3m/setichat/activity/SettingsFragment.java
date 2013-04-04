@@ -83,7 +83,7 @@ public class SettingsFragment extends Fragment {
 
 			@Override
 			public void onClick(View v) {
-				KeyPair kp = KeyStoreManager.generateNewKeys(KEYSTORE_NAME);
+				KeyPair kp = KeyStoreManager.generateNewKeys(getActivity());
 				// Cast PublicKey to String to send message
 				String publicKey = Base64.encodeToString(kp.getPublic().getEncoded(), false);
 				// Create Upload message

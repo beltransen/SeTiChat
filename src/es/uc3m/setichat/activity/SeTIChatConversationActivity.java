@@ -228,7 +228,7 @@ public class SeTIChatConversationActivity extends Activity {
 				ChatMessage m = XMLParser.XMLtoMessage(message);
 				
 				if(m.isEncrypted()){
-					text.append(sc.decrypt(m.getChatMessage()) + " on " +item.getDate() + "\n");
+					text.append(sc.decrypt(m.getChatMessage(), getApplicationContext()) + " on " +item.getDate() + "\n");
 				}else{
 					text.append(m.getChatMessage() + " on " +item.getDate() + "\n");
 				}
@@ -282,13 +282,13 @@ public class SeTIChatConversationActivity extends Activity {
 				objmessage.setType(4);
 				
 				if(settings.getBoolean("encryption", false)){
-					objmessage.setEncrypted(true);
+					objmessage.setEncrypted(true);					
 				}else{
 					objmessage.setEncrypted(false);
 				}
 				
 				if(settings.getBoolean("signature", false)){
-					objmessage.setSigned(true);				
+					objmessage.setSigned(true);		
 				}else{
 					objmessage.setSigned(false);				
 				}
@@ -303,7 +303,7 @@ public class SeTIChatConversationActivity extends Activity {
 				conv.setText(objmessage.toString());
 				conv.setDate(Calendar.getInstance().getTime().toString());
 				conv.setID(dbm.getConversationsCount());
-				dbm.addConversation(conv);
+				dbm.addConversation(conv);				
 				dbm.close();
 				//objmessage.set
 				

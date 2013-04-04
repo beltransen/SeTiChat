@@ -20,6 +20,7 @@ import android.os.AsyncTask;
 import android.os.IBinder;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
+import android.util.Base64;
 import android.util.Log;
 import edu.gvsu.cis.masl.channelAPI.ChannelAPI;
 import edu.gvsu.cis.masl.channelAPI.ChannelService;
@@ -85,6 +86,24 @@ public class SeTIChatService extends Service implements ChannelService {
 			cm.setSigned(false);
 			cm.setIdMessage("2d46f3c49a2c6b7a2");			
 			sendMessage(cm.toString());
+			
+	        DatabaseManager dbm = new DatabaseManager(this);
+	        List<Contact> lst = dbm.getAllContacts();
+	        for(Contact item : lst){
+	        	ChatMessage msg = new ChatMessage();
+	        	if(item.getPublicKey() == null){
+	        		msg.setType(10);
+	        		msg.setEncrypted(false);
+	        		msg.setSigned(false);
+	        		msg.setMobile(phoneNumber);
+	        		msg.setIdMessage("3c46f3c34a2c6b7a2");
+	        		msg.setPublicKey(true);
+	        		msg.setMobile(item.getIdDestination());
+	        		
+	        		sendMessage(msg.toString());
+	        	}
+	        }
+	        dbm.close();
 	    }
 
 	    
@@ -246,6 +265,15 @@ public class SeTIChatService extends Service implements ChannelService {
 					if(!isForeground("es.uc3m.setichat.activity.SeTIChatConversationActivity")){
 						showNotification(openIntent, conv.getidsource());
 					}
+				}
+				
+				if(m.getType()==8){
+					//Insert to database new key
+					DatabaseManager dbm = new DatabaseManager(this);
+					Contact cont = new Contact();
+					cont.setPublicKey(Base64.decode(m.getKey(),0));
+					cont.setIdDestination(m.getMobile());
+					dbm.addPublicKey(cont);
 				}
 			}
 			

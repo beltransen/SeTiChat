@@ -103,6 +103,19 @@ public class DatabaseManager extends SQLiteOpenHelper{
 	    db.close(); // Closing database connection
 	}
 	
+	public void addPublicKey(Contact contact) {
+	    SQLiteDatabase db = this.getWritableDatabase();
+	 
+	    ContentValues values = new ContentValues();	  	    
+	    values.put(CONTACT_KEY, contact.getPublicKey()); // Contact KEY
+	    values.put(CONTACT_IDDESTINATION, contact.getIdDestination());
+	    String strFilter = CONTACT_IDDESTINATION + "=" + contact.getIdDestination();
+	    // Inserting Row
+	    db.update(TABLE_CONTACTS, values, strFilter, null);
+
+	    db.close(); // Closing database connection
+	}
+	
 	 // Getting All Contacts
 	 public List<Contact> getAllContacts() {
 	    List<Contact> contactList = new ArrayList<Contact>();
@@ -249,7 +262,7 @@ public class DatabaseManager extends SQLiteOpenHelper{
 	        // return count
 	        return result;
 	    }
-	
+	    	
 	    public void dropDatabase(){
 	    	SQLiteDatabase db = this.getWritableDatabase();
 	    	db.execSQL("DROP TABLE IF EXISTS " + TABLE_CONVERSATIONS);

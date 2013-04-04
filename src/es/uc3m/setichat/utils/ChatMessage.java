@@ -328,7 +328,7 @@ public class ChatMessage {
 		if(this.signed){
 			SecurityModule sm = new SecurityModule();
 			String contentToSign= "<idDestination>"+this.idDestination+"</idDestination>"+"<idMessage>"+this.idMessage+"</idMessage>"+"<content>"+this.chatMessage+"</content>";
-			String signature = sm.sign(contentToSign); 
+			String signature = sm.sign(contentToSign, context); 
 			signatureBlock += "<signature>";
 			signatureBlock += signature;
 			signatureBlock += "</signature>";

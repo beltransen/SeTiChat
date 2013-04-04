@@ -26,6 +26,7 @@ import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.lang.ArrayUtils;
 
+import android.content.Context;
 import android.util.Log;
 import es.uc3m.setichat.utils.datamodel.Contact;
 
@@ -35,7 +36,7 @@ public class SecurityModule {
 	private static final int VECTOR_LENGTH = 16;
 	private final String PREFERENCES_FILE = "SeTiChat-Settings";
 	private final String SERVER_NAME = "setichat@appspot.com";
-	private final String KEYSTORE_NAME = "settichat_keystore";
+	private final String KEYSTORE_NAME = "setichat_keystore";
 	private Contact contact;
 	
 	public SecurityModule(Contact contact){ // Needed for encryption
@@ -133,11 +134,11 @@ public class SecurityModule {
 		return result;
 	}
 	
-	public String decrypt (String content){
+	public String decrypt (String content, Context context){
 		Log.i("DECRYPTION", "STARTING...");
 		
 		byte [] bContent = Base64.decode(content);
-        PrivateKey privateKey = KeyStoreManager.getPrivateKey(KEYSTORE_NAME);
+        PrivateKey privateKey = KeyStoreManager.getPrivateKey(context);
         
 		byte [] rsaKey = new byte [RSA_LENGTH];
 		byte [] iv = new byte [VECTOR_LENGTH];
@@ -218,9 +219,9 @@ public class SecurityModule {
 		return result;
 	}
 	
-	public String sign(String content){
+	public String sign(String content, Context context){
 		Log.i("SIGNATURE", "SIGNING...");
-		PrivateKey privateKey = KeyStoreManager.getPrivateKey(KEYSTORE_NAME);
+		PrivateKey privateKey = KeyStoreManager.getPrivateKey(context);
 		byte[] bContent = Base64.decode(content);
         // Signing
 		Signature sign = null;
