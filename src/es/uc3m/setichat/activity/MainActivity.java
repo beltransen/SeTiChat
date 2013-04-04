@@ -2,6 +2,7 @@ package es.uc3m.setichat.activity;
 
 import java.security.KeyPair;
 import java.util.ArrayList;
+import java.util.List;
 
 import android.app.ActionBar;
 import android.app.ActionBar.TabListener;
@@ -28,8 +29,10 @@ import es.uc3m.setichat.service.SeTIChatService;
 import es.uc3m.setichat.service.SeTIChatServiceBinder;
 import es.uc3m.setichat.utils.Base64;
 import es.uc3m.setichat.utils.ChatMessage;
+import es.uc3m.setichat.utils.DatabaseManager;
 import es.uc3m.setichat.utils.KeyStoreManager;
 import es.uc3m.setichat.utils.XMLParser;
+import es.uc3m.setichat.utils.datamodel.Contact;
 
 /**
  * This is the main activity and its used to initialize all the SeTIChat features. 
@@ -135,6 +138,8 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		        bindService(new Intent(MainActivity.this,
 						SeTIChatService.class), mConnection,
 						Context.BIND_AUTO_CREATE);
+		        
+
 	        }catch(Exception e){
 	    		Log.d("MainActivity", "Unknown Error", e);
 
@@ -158,7 +163,7 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 		
 		if(!haveKeys){
 			Log.i("KEYS", "FIRST BOOT. NO KEYS FOUND. GENERATING...");
-			kp = KeyStoreManager.generateNewKeys(KEYSTORE_NAME);
+			kp = KeyStoreManager.generateNewKeys(this);
 			String publicKey = Base64.encodeToString(kp.getPublic().getEncoded(), false);
 			// Create Upload message
 			ChatMessage mes = new ChatMessage();
@@ -176,12 +181,15 @@ public class MainActivity extends FragmentActivity implements ActionBar.TabListe
 			Log.i("PRIVATE", kp.getPrivate().toString());
 			Log.i("PUBLIC", kp.getPublic().toString());
 			
+			
+			
 			// Set flag in settings for further boots
 			SharedPreferences.Editor edit = settings.edit();
 			edit.putBoolean("generatedKeys", true);
 			edit.commit();
 			
 			Log.i("KEYS", "KEY GENERATION FINISHED WITHOUT ERRORS. USER NOW READY FOR SECURITY FEATURES");
+
 		}
 		
 		
